@@ -1,0 +1,10 @@
+.vscode
+*.DS_Store
+out
+.tsconfig.json
+project/ios/*.xcodeproj/xcuserdata
+project/ios/*.xcodeproj/xcshareddata
+project/ios/*.xcodeproj/project.xcworkspace
+aceqk1.gyp
+package-lock.json
+node_modules

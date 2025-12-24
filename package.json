@@ -1,0 +1,10 @@
+{
+  "name": "aceqk",
+  "app": "Aceqk",
+  "id": "org.quark.aceqk",
+  "main": "index.js",
+  "types": "index",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {}
+}

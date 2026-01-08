@@ -9,21 +9,21 @@ var Emitter = function() {};
 oop.implement(Emitter.prototype, EventEmitter);
 
 module.exports = {
-    "test: dispatch event with no data" : function() {
-        var emitter = new Emitter();
+	"test: dispatch event with no data" : function() {
+		var emitter = new Emitter();
 
-        var called = false;
-        emitter.addEventListener("juhu", function(e) {
-           called = true;
-           assert.equal(e.type, "juhu");
-        });
+		var called = false;
+		emitter.addEventListener("juhu", function(e) {
+		   called = true;
+		   assert.equal(e.type, "juhu");
+		});
 
-        emitter._emit("juhu");
-        assert.ok(called);
-    }
+		emitter._emit("juhu");
+		assert.ok(called);
+	}
 };
 
 
 if (typeof module !== "undefined" && module === require.main) {
-    require("asyncjs").test.testcase(module.exports).exec();
+	require("asyncjs").test.testcase(module.exports).exec();
 }

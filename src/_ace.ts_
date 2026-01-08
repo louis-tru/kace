@@ -1,0 +1,91 @@
+/**
+ * The main class required to set up an Ace instance in the browser.
+ *
+ * @namespace Ace
+ **/
+"use strict";
+"include loader_build";
+
+import dom from "./lib/dom";
+import {Range} from "./range";
+import {Editor} from "./editor";
+import {EditSession} from "./edit_session";
+import {UndoManager} from "./undomanager";
+import {VirtualRenderer} from "./virtual_renderer";
+import {Ace} from "../ace-internal";
+
+// The following require()s are for inclusion in the built ace file
+require("./worker/worker_client");
+require("./keyboard/hash_handler");
+require("./placeholder");
+require("./multi_select");
+require("./mode/folding/fold_mode");
+require("./theme/textmate");
+require("./ext/error_marker");
+
+exports.config = require("./config");
+
+/**
+ * Embeds the Ace editor into the DOM, at the element provided by `el`.
+ * @param {String | HTMLElement & {env?: any, value?: any} | null} [el] Either the id of an element, or the element itself
+ * @param {Partial<import("../ace-internal").Ace.EditorOptions> } [options] Options for the editor
+ * @returns {Editor}
+ **/
+export function edit(el: string | HTMLElement & {env?: any, value?: any} | null, options: Partial<Ace.EditorOptions> = {}): Editor {
+	if (typeof el == "string") {
+		var _id = el;
+		el = document.getElementById(_id);
+		if (!el)
+			throw new Error("ace.edit can't find div #" + _id);
+	}
+
+	if (el && el.env && el.env.editor instanceof Editor)
+		return el.env.editor;
+
+	var oldNode;
+	var value = "";
+	if (el && /input|textarea/i.test(el.tagName)) {
+		oldNode = el;
+		value = oldNode.value;
+		el = dom.createElement("pre");
+		oldNode.parentNode!.replaceChild(el, oldNode);
+	} else if (el) {
+		value = el.textContent;
+		el.innerHTML = "";
+	}
+
+	var doc = createEditSession(value);
+	var editor = new Editor(new VirtualRenderer(el), doc, options);
+
+	var env = {
+		document: doc,
+		editor: editor,
+		onResize: editor.resize.bind(editor, false),
+		textarea: null as any
+	};
+	if (oldNode) env.textarea = oldNode;
+	editor.on("destroy", function() {
+		env.editor.container.env = null; // prevent memory leak on old ie
+	});
+	editor.container.env = editor.env = env;
+	return editor;
+};
+
+/**
+ * Creates a new [[EditSession]], and returns the associated [[Document]].
+ * @param {import('./document').Document | String} text {:textParam}
+ * @param {import("../ace-internal").Ace.SyntaxMode} [mode] {:modeParam}
+ * @returns {EditSession}
+ **/
+export function createEditSession(text: string, mode?: Ace.SyntaxMode): EditSession {
+	var doc = new EditSession(text, mode);
+	doc.setUndoManager(new UndoManager());
+	return doc;
+};
+export {Range};
+export {Editor};
+export {EditSession};
+export {UndoManager};
+export {VirtualRenderer};
+var version = exports.config.version;
+exports.version = version;

@@ -1,7 +1,7 @@
 {
-  "name": "aceqk",
-  "app": "Aceqk",
-  "id": "org.quark.aceqk",
+  "name": "kace",
+  "app": "Kace",
+  "id": "org.quark.kace",
   "main": "index.js",
   "types": "index",
   "version": "1.0.0",

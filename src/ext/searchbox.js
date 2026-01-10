@@ -43,6 +43,7 @@ var MAX_COUNT = 999;
 dom.importCssString(searchboxCss, "ace_searchbox", false);
 
 class SearchBox {
+    
     /**
      * @param {Editor} editor
      * @param {never} [range]

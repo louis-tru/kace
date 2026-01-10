@@ -239,6 +239,12 @@ Object.assign(Text.prototype, textMarkerMixin);
 
 export type EditSessionTextMarkerMixin = typeof editSessionTextMarkerMixin;
 
+export type TextMarkers = EditSessionTextMarkerMixin & {
+	$textMarkers: TextMarker[];
+	$textMarkerId: number;
+	$scheduleForRemove: Set<string>;
+};
+
 const editSessionTextMarkerMixin = {
 	/**
 	 * Adds a text marker to the current edit session.

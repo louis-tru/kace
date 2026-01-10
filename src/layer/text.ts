@@ -552,7 +552,7 @@ export class Text extends EventEmitter<TextEvents> {
 
 		var bracketHighlight = this.session.$bracketHighlight;
 		if (bracketHighlight) {
-			var ranges = this.session.$bracketHighlight.ranges;
+			var ranges = bracketHighlight.ranges;
 			for (var i = 0; i < ranges.length; i++) {
 				if (cursor.row !== ranges[i].start.row) {
 					this.$highlightIndentGuideMarker.end = ranges[i].start.row + 1;
@@ -584,7 +584,7 @@ export class Text extends EventEmitter<TextEvents> {
 		this.$renderHighlightIndentGuide();
 	}
 
-	$clearActiveIndentGuide() {
+	$clearActiveIndentGuide(e?: any) {
 		var activeIndentGuides: View[] = [];
 		var v = this.element.first;
 		while (v) {

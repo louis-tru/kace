@@ -187,9 +187,9 @@ export class BackgroundTokenizer extends EventEmitter<BackgroundTokenizerEvents>
 	/**
 	 * Gives list of [[Token]]'s of the row. (tokens are cached)
 	 * @param {Number} row The row to get tokens at
-	 * @returns {import("../ace-internal").Ace.Token[]}
+	 * @returns {Token[]}
 	 **/
-	getTokens(row: number): Ace.Token[] {
+	getTokens(row: number): Token[] {
 		return this.lines[row] || this.$tokenizeRow(row);
 	}
 

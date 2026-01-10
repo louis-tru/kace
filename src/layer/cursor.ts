@@ -26,7 +26,7 @@ export class Cursor {
 	private drawCursor?: DrawCursor;
 	public element: Morph;
 	private isVisible = false;
-	private isBlinking = true;
+	public isBlinking = true;
 	private blinkInterval = 1000;
 	private smoothBlinking = false;
 	private session: EditSession;
@@ -35,7 +35,7 @@ export class Cursor {
 	private $updateCursors: (val: boolean) => void;
 	private intervalId?: TimeoutResult;
 	private $isSmoothBlinking?: boolean;
-	private config?: LayerConfig;
+	public config?: LayerConfig;
 	private overwrite = false;
 	private $isAnimating = false;
 

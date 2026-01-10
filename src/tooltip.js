@@ -326,7 +326,7 @@ class HoverTooltip extends Tooltip {
     /**
      * @param {Editor} editor
      * @param {Range} range
-     * @param {HTMLElement} domNode
+     * @param {import("quark").Text} domNode
      * @param {MouseEvent} [startingEvent]
      */
     showForRange(editor, range, domNode, startingEvent) {

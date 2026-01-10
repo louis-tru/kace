@@ -59,7 +59,7 @@ export abstract class Scrollbar extends EventEmitter<ScrollbarEvents> {
 		this.skipEvent = false;
 
 		this.element.onScroll.on(this.onScroll.bind(this));
-		this.element.onMouseDown.on(e => e.cancelDefault());
+		// this.element.onMouseDown.on(e => e.cancelDefault());
 	}
 
 	setVisible(isVisible: boolean) {
@@ -75,7 +75,7 @@ export abstract class Scrollbar extends EventEmitter<ScrollbarEvents> {
  * Represents a vertical scroll bar.
  **/
 export class VScrollBar extends Scrollbar {
-	private scrollTop: number;
+	public scrollTop: number;
 	private scrollHeight: number;
 	private width: number;
 	private $minWidth: number;
@@ -92,6 +92,8 @@ export class VScrollBar extends Scrollbar {
 		this.width = SCROLLBAR_SIZE;
 		this.element.style.width = SCROLLBAR_SIZE;
 		this.inner.style.width = SCROLLBAR_SIZE;
+		this.element.style.height = 'match';
+		this.element.style.align = 'end'; // right align
 	}
 
 	/**
@@ -102,7 +104,7 @@ export class VScrollBar extends Scrollbar {
 
 	protected onScroll() {
 		if (!this.skipEvent) {
-			this.scrollTop = this.element.scrollY;
+			this.scrollTop = this.element.scrollTop;
 			if (this.coeff != 1) {
 				var h = this.element.clientSize.y / this.scrollHeight;
 				this.scrollTop = this.scrollTop * (1 - h) / (this.coeff - h);
@@ -160,7 +162,7 @@ export class VScrollBar extends Scrollbar {
 		if (this.scrollTop != scrollTop) {
 			this.skipEvent = true;
 			this.scrollTop = scrollTop;
-			this.element.scrollY = scrollTop * this.coeff;
+			this.element.scrollTop = scrollTop * this.coeff;
 		}
 	}
 }
@@ -169,7 +171,7 @@ export class VScrollBar extends Scrollbar {
  * Represents a horisontal scroll bar.
  **/
 export class HScrollBar extends Scrollbar {
-	private scrollLeft: number;
+	public scrollLeft: number;
 	private height: number;
 	/**
 	 * Creates a new `HScrollBar`. `parent` is the owner of the scroll bar.
@@ -182,6 +184,9 @@ export class HScrollBar extends Scrollbar {
 		this.height = SCROLLBAR_SIZE;
 		this.inner.style.height = SCROLLBAR_SIZE;
 		this.element.style.height = SCROLLBAR_SIZE;
+		this.element.style.width = 'match';
+		this.element.style.align = 'bottom'; // boottom align
+		this.element.style.marginRight = SCROLLBAR_SIZE;
 	}
 
 	/**
@@ -191,7 +196,7 @@ export class HScrollBar extends Scrollbar {
 	 **/
 	protected onScroll() {
 		if (!this.skipEvent) {
-			this.scrollLeft = this.element.scrollY;
+			this.scrollLeft = this.element.scrollLeft;
 			this._emit("scroll", {data: this.scrollLeft}, this);
 		}
 		this.skipEvent = false;
@@ -239,7 +244,7 @@ export class HScrollBar extends Scrollbar {
 		// this.element.scrollTop != scrollTop which makes page to scroll up.
 		if (this.scrollLeft != scrollLeft) {
 			this.skipEvent = true;
-			this.scrollLeft = this.element.scrollY = scrollLeft;
+			this.scrollLeft = this.element.scrollLeft = scrollLeft;
 		}
 	}
 }

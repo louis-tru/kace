@@ -2,8 +2,11 @@
 
 let $cancelT: number | false = false;
 
-	/** @type {string|false} */
 export let lineMode: string | false =  false;
+
+export function setLineMode(text: string | false) {
+	lineMode = text;
+}
 
 export function pasteCancelled() {
 	if ($cancelT && $cancelT > Date.now() - 50)

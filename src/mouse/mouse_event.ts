@@ -2,12 +2,15 @@
 
 // var event = require("../lib/event");
 // var useragent = require("../lib/useragent");
+import type {MouseEvent as UIMouseEvent} from "quark/event";
+import type { Editor } from "../editor";
 
 /*
  * Custom Ace mouse event
  */
 export class MouseEvent {
-	constructor(domEvent, editor) {
+	domEvent: UIMouseEvent;
+	constructor(domEvent: UIMouseEvent, editor: Editor) {
 		/** @type {number} */this.speed;
 		/** @type {number} */this.wheelX;
 		/** @type {number} */this.wheelY;

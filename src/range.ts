@@ -1,11 +1,5 @@
 "use strict";
 
-/**
- * @typedef {import("./edit_session").EditSession} EditSession
- * @typedef {import("../ace-internal").Ace.IRange} IRange
- * @typedef {import("../ace-internal").Ace.Point} Point
- */
-
 import type {EditSession} from "./edit_session";
 import type {Fold} from "./edit_session/fold";
 
@@ -19,10 +13,11 @@ export interface IRange {
 	end: Point;
 }
 
-export interface Range {
+export interface Range extends IRange {
 	id?: number;
 	cursor?: Point;
 	isBackwards?: boolean;
+	collapseChildren?: number
 }
 
 export interface Delta {
@@ -38,8 +33,6 @@ export interface Delta {
  * This object is used in various places to indicate a region within the editor. To better visualize how this works, imagine a rectangle. Each quadrant of the rectangle is analogous to a range, as ranges contain a starting row and starting column, and an ending row, and ending column.
  **/
 export class Range {
-	start: Point;
-	end: Point;
 	/**
 	 * Creates a new `Range` object with the given starting and ending rows and columns.
 	 * @param {Number} [startRow] The starting row
@@ -60,7 +53,25 @@ export class Range {
 			column: endColumn
 		};
 	}
-	
+
+	/**
+	 * Creates and returns a new `Range` based on the `start` [[Point]] and `end` [[Point]] of the given parameters.
+	 * @param {IRange} range A range to convert
+	 * @returns {Range}
+	**/
+	static new(range: IRange): Range {
+		return new Range(range.start.row, range.start.column, range.end.row, range.end.column);
+	}
+
+	/**
+	 * Returns `true` if the given `range` is empty (starting [[Point]] == ending [[Point]]).
+	 * @param {IRange} range A range to check
+	 * @returns {Boolean}
+	 **/
+	static isEmpty(range: IRange) {
+		return (range.start.row === range.end.row && range.start.column === range.end.column);
+	}
+
 	/**
 	 * Returns `true` if and only if the starting row and column, and ending row and column, are equivalent to those given by `range`.
 	 * @param {IRange} range A range to check against
@@ -419,7 +430,7 @@ export class Range {
 	 * @returns {Boolean}
 	 **/
 	isEmpty() {
-		return (this.start.row === this.end.row && this.start.column === this.end.column);
+		return Range.isEmpty(this);
 	}
 
 	/**

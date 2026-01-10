@@ -1,8 +1,4 @@
 "use strict";
-/**
- * @typedef {import("../edit_session").EditSession} EditSession
- * @typedef {import("../../ace-internal").Ace.LayerConfig} LayerConfig
- */
 
 import {View, Morph, Box} from "quark";
 import {StyleSheets} from "quark/css";

@@ -85,41 +85,7 @@ export declare namespace Ace {
 		hideDelay: number;
 	}
 
-	interface ScreenCoordinates {
-		row: number,
-		column: number,
-		side?: 1 | -1,
-		offsetX?: number
-	}
-
 	type IRange = import("./src/range").IRange;
-
-	interface LineWidget {
-		editor?: Editor,
-		// el?: HTMLElement;
-		el?: import('quark').Box;
-		rowCount?: number;
-		hidden?: boolean;
-		_inDocument?: boolean;
-		column?: number;
-		row: number;
-		$oldWidget?: LineWidget,
-		session?: EditSession,
-		html?: string,
-		text?: string,
-		className?: string,
-		coverGutter?: boolean,
-		pixelHeight?: number,
-		$fold?: Fold,
-		type?: any,
-		destroy?: () => void;
-		coverLine?: boolean,
-		fixedWidth?: boolean,
-		fullWidth?: boolean,
-		screenWidth?: number,
-		rowsAbove?: number,
-		lenses?: CodeLenseCommand[],
-	}
 
 	type NewLineMode = import("./src/document").NewLineMode;
 
@@ -155,24 +121,6 @@ export declare namespace Ace {
 	type BackgroundTokenizerEvents = import("./src/background_tokenizer").BackgroundTokenizerEvents;
 	type BackgroundTokenizer = import("./src/background_tokenizer").BackgroundTokenizer;
 
-	interface SelectionEvents {
-		/**
-		 * Emitted when the cursor position changes.
-		 **/
-		"changeCursor": (e: undefined, emitter: Selection) => void;
-		/**
-		 * Emitted when the cursor selection changes.
-		 **/
-		"changeSelection": (e: undefined, emitter: Selection) => void;
-	}
-
-	interface MultiSelectionEvents extends SelectionEvents {
-		"multiSelect": (e: undefined, emitter: Selection) => void;
-		"addRange": (e: { range: Range }, emitter: Selection) => void;
-		"removeRange": (e: { ranges: Range[] }, emitter: Selection) => void;
-		"singleSelect": (e: undefined, emitter: Selection) => void;
-	}
-
 	interface PlaceHolderEvents {
 		"cursorEnter": (e: any, emitter: import("./src/placeholder").PlaceHolder) => void;
 		"cursorLeave": (e: any, emitter: import("./src/placeholder").PlaceHolder) => void;
@@ -184,36 +132,6 @@ export declare namespace Ace {
 
 	type EventEmitter<T extends { [K in keyof T]: (...args: any[]) => any }> = import("./src/lib/event_emitter").EventEmitter<T>;
 
-	interface SearchOptions {
-		/**The string or regular expression you're looking for*/
-		needle: string | RegExp;
-		preventScroll: boolean;
-		/**Whether to search backwards from where cursor currently is*/
-		backwards: boolean;
-		/**The starting [[Range]] or cursor position to begin the search*/
-		start: Range;
-		/**Whether or not to include the current line in the search*/
-		skipCurrent: boolean;
-		/**The [[Range]] to search within. Set this to `null` for the whole document*/
-		range: Range | null;
-		preserveCase: boolean;
-		/**Whether the search is a regular expression or not*/
-		regExp: boolean;
-		/**Whether the search matches only on whole words*/
-		wholeWord: boolean;
-		/**Whether the search ought to be case-sensitive*/
-		caseSensitive: boolean;
-		/**Whether to wrap the search back to the beginning when it hits the end*/
-		wrap: boolean;
-		re: any;
-		/**true, if needle has \n or \r\n*/
-		$isMultiLine: boolean;
-		/**
-		 * internal property, determine if browser supports unicode flag
-		 * @private
-		 * */
-		$supportsUnicodeFlag: boolean;
-	}
 
 	type Point = import("./src/range").Point;
 	type Position = Point;
@@ -233,29 +151,6 @@ export declare namespace Ace {
 
 	type MarkerGroup = import("./src/marker_group").MarkerGroup;
 
-	export interface Command {
-		name?: string;
-		bindKey?: string | { mac?: string, win?: string };
-		readOnly?: boolean;
-		exec?: (editor?: Editor | any, args?: any) => void;
-		isAvailable?: (editor: Editor) => boolean;
-		description?: string,
-		multiSelectAction?: "forEach" | "forEachLine" | Function,
-		scrollIntoView?: true | "cursor" | "center" | "selectionPart" | "animate" | "selection" | "none",
-		aceCommandGroup?: string,
-		passEvent?: boolean,
-		level?: number,
-		action?: string,
-	}
-
-	type CommandLike = Command | ((editor: Editor) => void) | ((sb: SearchBox) => void);
-
-	type KeyboardHandler = Partial<import("./src/keyboard/hash_handler").HashHandler> & {
-		attach?: (editor: Editor) => void;
-		detach?: (editor: Editor) => void;
-		getStatusText?: (editor?: any, data?: any) => string;
-	}
-
 	type BaseCompletion = import("./src/autocomplete").BaseCompletion;
 	type SnippetCompletion = import("./src/autocomplete").SnippetCompletion;
 	type ValueCompletion = import("./src/autocomplete").ValueCompletion;
@@ -268,139 +163,14 @@ export declare namespace Ace {
 	type CompletionCallbackFunction = import("./src/autocomplete").CompletionCallbackFunction;
 	type CompletionProviderCallback = import("./src/autocomplete").CompletionProviderCallback;
 	type AcePopupNavigation = import("./src/autocomplete").AcePopupNavigation;
-
-	type HighlightRule = ({ defaultToken: string } | { include: string } | { todo: string } | {
-		token: string | string[] | ((value: string) => string);
-		regex: string | RegExp;
-		next?: string | (() => void);
-		push?: string;
-		comment?: string;
-		caseInsensitive?: boolean;
-		nextState?: string;
-	}) & { [key: string]: any };
-
-	type HighlightRulesMap = Record<string, HighlightRule[]>;
-
-	type KeywordMapper = (keyword: string) => string;
-
-	interface HighlightRules {
-		$rules: HighlightRulesMap;
-		$embeds: string[];
-		$keywords: any[];
-		$keywordList: string[];
-
-		addRules(rules: HighlightRulesMap, prefix?: string): void;
-
-		getRules(): HighlightRulesMap;
-
-		embedRules(rules: (new () => HighlightRules) | HighlightRulesMap, prefix: string, escapeRules?: boolean, append?: boolean): void;
-
-		getEmbeds(): string[];
-
-		normalizeRules(): void;
-
-		createKeywordMapper(map: Record<string, string>, defaultToken?: string, ignoreCase?: boolean, splitChar?: string): KeywordMapper;
-	}
-
 	type FoldMode = import("./src/mode/folding/fold_mode").FoldMode;
-
-	type BehaviorAction = (state: string | string[], action: string, editor: Editor, session: EditSession, text: string | Range) => ({
-		text: string,
-		selection: number[]
-	} | Range) & { [key: string]: any } | undefined;
-	type BehaviorMap = Record<string, Record<string, BehaviorAction>>;
-
-	interface Behaviour {
-		$behaviours: { [behaviour: string]: any }
-
-		add(name: string, action: string, callback: BehaviorAction): void;
-
-		addBehaviours(behaviours: BehaviorMap): void;
-
-		remove(name: string): void;
-
-		inherit(mode: SyntaxMode | (new () => SyntaxMode), filter: string[]): void;
-
-		getBehaviours(filter?: string[]): BehaviorMap;
-	}
+	type SyntaxMode = import("./src/mode").SyntaxMode;
+	type Command = import("./src/keyboard/hash_handler").Command;
 
 	interface Outdent {
 		checkOutdent(line: string, input: string): boolean;
 
 		autoOutdent(doc: Document, row: number): number | undefined;
-	}
-
-	interface SyntaxMode {
-		/**
-		 * quotes used by language mode
-		 */
-		$quotes: { [quote: string]: string };
-		HighlightRules: {
-			new(config?: any): HighlightRules
-		}; //TODO: fix this
-		foldingRules?: FoldMode;
-		$behaviour?: Behaviour;
-		$defaultBehaviour?: Behaviour;
-		/**
-		 * characters that indicate the start of a line comment
-		 */
-		lineCommentStart?: string;
-		/**
-		 * characters that indicate the start and end of a block comment
-		 */
-		blockComment?: { start: string, end: string }
-		tokenRe?: RegExp;
-		nonTokenRe?: RegExp;
-		/**
-		 * An object containing conditions to determine whether to apply matching quote or not.
-		 */
-		$pairQuotesAfter: { [quote: string]: RegExp }
-		$tokenizer: Tokenizer;
-		$highlightRules: HighlightRules;
-		$embeds?: string[];
-		$modes?: SyntaxMode[];
-		$keywordList?: string[];
-		$highlightRuleConfig?: any;
-		completionKeywords: string[];
-		transformAction: BehaviorAction;
-		path?: string;
-
-		getTokenizer(): Tokenizer;
-
-		toggleCommentLines(state: string | string[],
-						   session: EditSession,
-						   startRow: number,
-						   endRow: number): void;
-
-		toggleBlockComment(state: string | string[],
-						   session: EditSession,
-						   range: Range,
-						   cursor: Point): void;
-
-		getNextLineIndent(state: string | string[], line: string, tab: string): string;
-
-		checkOutdent(state: string | string[], line: string, input: string): boolean;
-
-		autoOutdent(state: string | string[], doc: EditSession, row: number): void;
-
-		// TODO implement WorkerClient types
-		createWorker(session: EditSession): any;
-
-		createModeDelegates(mapping: { [key: string]: string }): void;
-
-		getKeywords(append?: boolean): Array<string | RegExp>;
-
-		getCompletions(state: string | string[],
-					   session: EditSession,
-					   pos: Point,
-					   prefix: string): Completion[];
-
-		$getIndent(line: string): string;
-
-		$createKeywordList(): string[];
-
-		$delegator(method: string, args: IArguments, defaultHandler: any): any;
-
 	}
 
 	interface OptionsBase {
@@ -413,18 +183,6 @@ export declare namespace Ace {
 
 	interface CommandMap {
 		[name: string]: Command;
-	}
-
-	type execEventHandler = (obj: {
-		editor: Editor,
-		command: Command,
-		args: any[]
-	}, emitter: CommandManager) => void;
-
-	interface CommandManagerEvents {
-		"exec": execEventHandler
-		"afterExec": execEventHandler;
-		"commandUnavailable": execEventHandler;
 	}
 
 	type CommandManager = import("./src/commands/command_manager").CommandManager;
@@ -484,87 +242,6 @@ export declare namespace Ace {
 		command?: CodeLenseCommand
 	}
 
-	interface MultiSelectProperties {
-		ranges: Ace.Range[] | null;
-		rangeList: Ace.RangeList | null;
-
-		/**
-		 * Adds a range to a selection by entering multiselect mode, if necessary.
-		 * @param {Ace.Range} range The new range to add
-		 * @param {Boolean} [$blockChangeEvents] Whether or not to block changing events
-		 **/
-		addRange(range: Ace.Range, $blockChangeEvents?: boolean): any;
-
-		inMultiSelectMode: boolean;
-
-		/**
-		 * @param {Ace.Range} [range]
-		 **/
-		toSingleRange(range?: Ace.Range): void;
-
-		/**
-		 * Removes a Range containing pos (if it exists).
-		 * @param {Ace.Point} pos The position to remove, as a `{row, column}` object
-		 **/
-		substractPoint(pos: Ace.Point): any;
-
-		/**
-		 * Merges overlapping ranges ensuring consistency after changes
-		 **/
-		mergeOverlappingRanges(): void;
-
-		/**
-		 * @param {Ace.Range} range
-		 */
-		$onAddRange(range: Ace.Range): void;
-
-		rangeCount: number;
-
-		/**
-		 *
-		 * @param {Ace.Range[]} removed
-		 */
-		$onRemoveRange(removed: Ace.Range[]): void;
-
-		/**
-		 * adds multicursor support to selection
-		 */
-		$initRangeList(): void;
-
-		/**
-		 * Returns a concatenation of all the ranges.
-		 * @returns {Ace.Range[]}
-		 **/
-		getAllRanges(): Ace.Range[];
-
-		/**
-		 * Splits all the ranges into lines.
-		 **/
-		splitIntoLines(): void;
-
-		/**
-		 */
-		joinSelections(): void;
-
-		/**
-		 **/
-		toggleBlockSelection(): void;
-
-		/**
-		 *
-		 * Gets list of ranges composing rectangular block on the screen
-		 *
-		 * @param {Ace.ScreenCoordinates} screenCursor The cursor to use
-		 * @param {Ace.ScreenCoordinates} screenAnchor The anchor to use
-		 * @param {Boolean} [includeEmptyLines] If true, this includes ranges inside the block which are empty due to clipping
-		 * @returns {Ace.Range[]}
-		 **/
-		rectangularRangeBlock(screenCursor: Ace.ScreenCoordinates, screenAnchor: Ace.ScreenCoordinates, includeEmptyLines?: boolean): Ace.Range[];
-
-		// _eventRegistry?: any;
-		index?: number;
-	}
-
 	type AcePopupEventsCombined = Ace.EditorEvents & Ace.AcePopupEvents;
 	type AcePopupWithEditor = Ace.EventEmitter<AcePopupEventsCombined> & Ace.Editor;
 	type InlineAutocompleteAction = import("./src/autocomplete").InlineAutocompleteAction;
@@ -599,17 +276,6 @@ export declare namespace Ace {
 		showGutter?: boolean
 	}
 
-	export interface Operation {
-		command: {
-			name?: string;
-		};
-		args: any;
-		selectionBefore?: Range | Range[];
-		selectionAfter?: Range | Range[];
-		docChanged?: boolean;
-		selectionChanged?: boolean;
-	}
-
 	export interface CommandBarEvents {
 		"hide": (e: undefined, emitter: import("./src/ext/command_bar").CommandBarTooltip) => void;
 		"show": (e: undefined, emitter: import("./src/ext/command_bar").CommandBarTooltip) => void;
@@ -624,16 +290,8 @@ export declare namespace Ace {
 		"scroll": (e: { data: number }, emitter: ScrollBar) => void;
 	}
 
-	export interface TextInputAriaOptions {
-		activeDescendant?: string;
-		role?: string;
-		setLabel?: boolean;
-		inline?: boolean;
-	}
-
 	type EditorOptions = import("./src/editor").EditorOptions;
 }
-
 
 export declare const version: string;
 export declare const config: Ace.Config;
@@ -676,20 +334,14 @@ declare global {
 	}
 }
 
-declare module "./src/placeholder" {
-	export interface PlaceHolder extends Ace.EventEmitter<Ace.PlaceHolderEvents> {
-	}
-}
-
-declare module "./src/line_widgets" {
-	export interface LineWidgets {
-		lineWidgets: Ace.LineWidget[];
+declare module "./src/ext/searchbox" {
+	export interface SearchBox {
 		editor: Ace.Editor;
 	}
 }
 
-declare module "./src/selection" {
-	export interface Selection extends Ace.EventEmitter<Ace.MultiSelectionEvents>, Ace.MultiSelectProperties {
+declare module "./src/placeholder" {
+	export interface PlaceHolder extends Ace.EventEmitter<Ace.PlaceHolderEvents> {
 	}
 }
 
@@ -701,12 +353,6 @@ declare module "./src/snippets" {
 declare module "./src/ext/command_bar" {
 	export interface CommandBarTooltip extends Ace.EventEmitter<Ace.CommandBarEvents> {
 		$shouldHideMoreOptions?: boolean,
-	}
-}
-
-declare module "./src/commands/command_manager" {
-	export interface CommandManager extends Ace.EventEmitter<Ace.CommandManagerEvents> {
-		$checkCommandState?: boolean
 	}
 }
 

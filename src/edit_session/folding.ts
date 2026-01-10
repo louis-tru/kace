@@ -5,9 +5,10 @@ import {FoldLine} from "./fold_line";
 import {Fold} from "./fold";
 import {TokenIterator} from "../token_iterator";
 import type {EditSession} from "../edit_session";
-import type { Delta } from "../range";
+import type { Delta, IRange } from "../range";
 import type { FoldMode } from "../mode/folding/fold_mode";
 import {MouseEvent} from "../mouse/mouse_event";
+import type { UIEvent, MouseEvent as UIMouseEvent } from "quark/event";
 
 /**
  * @typedef {import("../edit_session").EditSession & import("../../ace-internal").Folding} IFolding
@@ -27,9 +28,9 @@ export interface Folding {
 	/**
 	 * Returns all folds in the given range. Note, that this will return folds
 	 **/
-	getFoldsInRange(range: Range | Delta): Fold[];
+	getFoldsInRange(range: IRange | Delta): Fold[];
 
-	getFoldsInRangeList(ranges: Range[] | Range): Fold[];
+	getFoldsInRangeList(ranges: IRange[] | IRange): Fold[];
 
 	/**
 	 * Returns all folds in the document
@@ -86,7 +87,7 @@ export interface Folding {
 
 	expandFolds(folds: Fold[]): void;
 
-	unfold(location?: number | Point | Range | Range[], expandInner?: boolean): Fold[] | undefined;
+	unfold(location?: number | Point | IRange | IRange[], expandInner?: boolean): Fold[] | undefined;
 
 	/**
 	 * Checks if a given documentRow is folded. This is true if there are some
@@ -136,7 +137,7 @@ export interface Folding {
 		firstRange?: Range;
 	};
 
-	onFoldWidgetClick(row: number, e: any): void;
+	onFoldWidgetClick(row: number, e: MouseEvent | UIMouseEvent): void;
 
 	$toggleFoldWidget(row: number, options: any): Fold | any;
 
@@ -432,8 +433,7 @@ export function Folding(this: EditSession) {
 			fold = placeholder;
 		else {
 			fold = new Fold(range!, placeholder);
-			// @ts-ignore
-			fold.collapseChildren = range.collapseChildren;
+			fold.collapseChildren = range!.collapseChildren;
 		}
 		this.$clipRangeToDocument(fold.range);
 
@@ -1052,21 +1052,21 @@ export function Folding(this: EditSession) {
 	 * @param {number} row
 	 * @param {any} e
 	 */
-	this.onFoldWidgetClick = function(row, e) {
+	this.onFoldWidgetClick = function(row, e: MouseEvent | UIMouseEvent) {
 		if (e instanceof MouseEvent)
 			e = e.domEvent;
 
 		var options = {
-			children: e.shiftKey,
-			all: e.ctrlKey || e.metaKey,
-			siblings: e.altKey
+			children: e.shift,
+			all: e.ctrl || e.command,
+			siblings: e.alt
 		};
 		
 		var range = this.$toggleFoldWidget(row, options);
 		if (!range) {
-			var el = (e.target || e.srcElement);
-			if (el && /ace_fold-widget/.test(el.className))
-				el.className += " ace_invalid";
+			var el = e.origin;
+			if (el && /ace_fold-widget/.test(el.class+''))
+				el.cssclass.add("ace_invalid");
 		}
 	};
 

@@ -7,23 +7,22 @@ import type { FoldLine } from "./fold_line";
 /*
  * Simple fold-data struct.
  **/
-export class Fold extends RangeList {
-	range: Range;
-	placeholder: any;
-	foldLine?: FoldLine;
-	start: Point
-	end: Point
-	sameRow: boolean
-	subFolds: Fold[]
-	ranges: Fold[]
-	collapseChildren?: number
+export class Fold { //extends RangeList {
+	public range: Range;
+	public placeholder: any;
+	public foldLine?: FoldLine;
+	public start: Point
+	public end: Point
+	public sameRow: boolean
+	public subFolds: Fold[]
+	public collapseChildren?: number
 
 	/**
 	 * @param {Range} range
 	 * @param {any} placeholder
 	 */
 	constructor(range: Range, placeholder: any) {
-		super();
+		// super();
 		this.foldLine = void 0;
 		this.placeholder = placeholder;
 		this.range = range;
@@ -31,10 +30,10 @@ export class Fold extends RangeList {
 		this.end = range.end;
 
 		this.sameRow = range.start.row == range.end.row;
-		/**@type {Fold[]}*/
-		this.subFolds = this.ranges = [];
+		this.subFolds = [];
+		// this.subFolds = this.ranges = [];
 	}
-	
+
 	toString() {
 		return '"' + this.placeholder + '" ' + this.range.toString();
 	}

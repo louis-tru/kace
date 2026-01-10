@@ -1,21 +1,13 @@
 "use strict";
-/**
- * @typedef {import("./layer/font_metrics").FontMetrics} FontMetrics
- * @typedef {import("./edit_session/fold_line").FoldLine} FoldLine
- * @typedef {import("../ace-internal").Ace.Point} Point
- * @typedef {import("../ace-internal").Ace.Delta} Delta
- * @typedef {import("../ace-internal").Ace.IRange} IRange
- * @typedef {import("../ace-internal").Ace.SyntaxMode} SyntaxMode
- * @typedef {import("../ace-internal").Ace.LineWidget} LineWidget
- */
+
 import * as lang from "./lib/lang";
 import {BidiHandler} from "./bidihandler";
 import config from "./config";
 import {EventEmitter} from "./lib/event_emitter";
 import {Selection} from "./selection";
-import {Mode as TextMode} from "./mode/text";
+import {TextMode} from "./mode";
 import {Range,Delta,Point} from "./range";
-import {LineWidgets} from "./line_widgets";
+import {LineWidget, LineWidgets} from "./line_widgets";
 import {Document, NewLineMode} from "./document";
 import {BackgroundTokenizer} from "./background_tokenizer";
 import {SearchHighlight} from "./search_highlight";
@@ -26,20 +18,21 @@ import util from "quark/util";
 import type { FontMetrics } from "./layer/font_metrics";
 import {Folding} from "./edit_session/folding";
 import {BracketMatch} from "./edit_session/bracket_match";
-import type {TextMarker,EditSessionTextMarkerMixin} from "./layer/text_markers";
+import type {TextMarkers} from "./layer/text_markers";
 import type {OptionsProvider} from "./lib/app_config";
-import { MarkerLike, MarkerRenderer } from "./layer/marker";
+import type { MarkerLike, MarkerRenderer } from "./layer/marker";
+import type { Editor } from "./editor";
+import type { RangeList } from "./range_list";
 
-export type TextMarkers = EditSessionTextMarkerMixin & {
-	$textMarkers: TextMarker[];
-	$textMarkerId: number;
-	$scheduleForRemove: Set<string>;
-};
-
-/**
- * @typedef TextMode
- * @type {SyntaxMode}
- */
+export interface Operation {
+	command?: Ace.Command;
+	args?: any;
+	selectionBefore?: Range | Range[];
+	selectionAfter?: Range | Range[];
+	docChanged?: boolean;
+	selectionChanged?: boolean;
+	scrollTop?: number;
+}
 
 export interface EditSessionEvents {
 	/**
@@ -107,7 +100,7 @@ export interface EditSessionEvents {
 	 * @param scrollLeft The new scroll left value
 	 **/
 	"changeScrollLeft": (scrollLeft: number, emitter: EditSession) => void;
-	"changeEditor": (e: { editor?: Ace.Editor, oldEditor?: Ace.Editor }, emitter: EditSession) => void;
+	"changeEditor": (e: { editor?: Editor, oldEditor?: Editor }, emitter: EditSession) => void;
 	"changeSelection": (e: undefined, emitter: EditSession) => void;
 	"startOperation": (op: { command?: { name?: string }, args?: any }, emitter: EditSession) => void;
 	"endOperation": (op: any, emitter: EditSession) => void;
@@ -143,11 +136,14 @@ export interface EditSession extends EventEmitter<EditSessionEvents>,
 	$useWorker?: boolean,
 	$wrapAsCode?: boolean,
 	$indentedSoftWrap?: boolean,
-	$bracketHighlight?: any,
+	$bracketHighlight?: {
+		ranges: Range[],
+		markerIds: number[]
+	},
 	$selectionMarker?: number,
 	lineWidgetsWidth?: number,
 	$getWidgetScreenLength?: () => number,
-	_changedWidgets?: any,
+	_changedWidgets?: LineWidget[],
 	$options: any,
 	$wrapMethod?: any,
 	$enableVarChar?: any,
@@ -158,13 +154,13 @@ export interface EditSession extends EventEmitter<EditSessionEvents>,
 	$firstLineNumber?: number,
 	$emacsMark?: any,
 	selectionMarkerCount?: number,
-	multiSelect?: any,
+	multiSelect?: Selection & {	ranges: Range[]; rangeList: RangeList;},
 	$occurHighlight?: any,
 	$occur?: Ace.Occur,
 	$occurMatchingLines?: any,
 	$useEmacsStyleLineStart?: boolean,
 	$selectLongWords?: boolean,
-	curOp: Ace.Operation | null,
+	curOp?: Operation;
 
 	getSelectionMarkers(): any[],
 }
@@ -192,12 +188,11 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	private $frontMarkers: any = {};
 	private $backMarkers: any = {};
 	private $markerId: number = 1;
-	private $undoSelect: boolean = true;
-	private $editor: any = null;
-	private prevOp: Ace.Operation | null = null;
-	/** @type {FoldLine[]} */
-	$foldData: FoldLine[] = [];
-	public id: string = "session" + (++EditSession.$uid);
+	public $undoSelect: boolean = true;
+	public $editor: Editor | null = null;
+	public prevOp?: Operation;
+	public $foldData: FoldLine[] = [];
+	readonly id: string = "session" + (++EditSession.$uid);
 	private static $uid: number = 0;
 	// @experimental
 	public $gutterCustomWidgets: any = {};
@@ -205,26 +200,26 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	public bgTokenizer: BackgroundTokenizer;
 	private $onChange = this.onChange.bind(this);
 	private $onSelectionChange = this.onSelectionChange.bind(this);
-	public selection: Ace.Selection;
-	/*private*/$bidiHandler: BidiHandler;
-	private destroyed: boolean = false;
+	public selection: Selection;
+	public $bidiHandler: BidiHandler;
+	public destroyed: boolean = false;
 
 	private $lastSel: any;
 	private $operationResetTimer: ReturnType<typeof lang.delayedCall>;
 
-	/*private*/$docRowCache: number[] = [];
-	/*private*/$screenRowCache: number[] = [];
+	public $docRowCache: number[] = [];
+	public $screenRowCache: number[] = [];
 
-	/*private*/$wrapData: (Array<number>&{indent?: number})[] = [];
+	public $wrapData: (Array<number>&{indent?: number})[] = [];
 	private $rowLengthCache: number[] = [];
 
 	private $fromUndo: boolean = false;
 	private $undoManager?: Ace.UndoManager;
-	private mergeUndoDeltas: boolean = false;
+	public mergeUndoDeltas: boolean = false;
 	private $informUndoManager?: ReturnType<typeof lang.delayedCall>;
 
 	private $annotations: Ace.Annotation[] = [];
-	private $mode: Ace.SyntaxMode;
+	public $mode: Ace.SyntaxMode;
 	private $modeId: string = "";
 	private $scrollLeft: number = 0;
 	public $scrollTop: number = 0;
@@ -276,7 +271,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 
 	$initOperationListeners() {
 		/**@type {import("../ace-internal").Ace.Operation | null}*/
-		this.curOp = null;
+		this.curOp = void 0;
 		this.on("change", () => {
 			if (!this.curOp) {
 				this.startOperation();
@@ -301,7 +296,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Start an Ace operation, which will then batch all the subsequent changes (to either content or selection) under a single atomic operation.
 	 * @param {{command?: {name?: string}, args?: any}|undefined} [commandEvent] Optional name for the operation
 	 */
-	startOperation(commandEvent?: {command?: {name?: string}, args?: any}) {
+	startOperation(commandEvent?: Operation) {
 		if (this.curOp) {
 			if (!commandEvent || this.curOp.command) {
 				return;
@@ -326,10 +321,10 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Emits "beforeEndOperation" event just before clearing everything, where the current operation can be accessed through `curOp` property.
 	 * @param {any} [e]
 	 */
-	endOperation(e?: any) {
+	endOperation(e?: Ace.Command | boolean) {
 		if (this.curOp) {
-			if (e && e.returnValue === false) {
-				this.curOp = null;
+			if (e && (e as {returnValue?: number}).returnValue === 0) {
+				this.curOp = void 0;
 				this._signal("endOperation", e, this);
 				return;
 			}
@@ -346,7 +341,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 
 			this._signal("beforeEndOperation", void 0, this);
 			this.prevOp = this.curOp;
-			this.curOp = null;
+			this.curOp = void 0;
 			this._signal("endOperation", e, this);
 		}
 	}
@@ -716,7 +711,13 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {Number} tabSize The new tab size
 	 **/
 	setTabSize(tabSize: number) {
-		this.setOption("tabSize", tabSize);
+		tabSize = parseInt(tabSize as any, 10);
+		if (tabSize > 0 && this.$tabSize !== tabSize) {
+			this.$modified = true;
+			this.$rowLengthCache = [];
+			this.$tabSize = tabSize;
+			this._signal("changeTabSize", undefined, this);
+		}
 	}
 	/**
 	 * Returns the current tab size.
@@ -938,7 +939,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Removes the marker with the specified ID. If this marker was in front, the `'changeFrontMarker'` event is emitted. If the marker was in the back, the `'changeBackMarker'` event is emitted.
 	 * @param {Number} markerId A number representing a marker
 	 **/
-	removeMarker(markerId: number) {
+	removeMarker(markerId: number = 0) {
 		var marker = this.$frontMarkers[markerId] || this.$backMarkers[markerId];
 		if (!marker)
 			return;
@@ -962,7 +963,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	/**
 	 * @param {RegExp} re
 	 */
-	highlight(re: RegExp) {
+	highlight(re?: RegExp) {
 		if (!this.$searchHighlight) {
 			var highlight = new SearchHighlight(null, "ace_selected-word", "text");
 			this.$searchHighlight = this.addDynamicMarker(highlight);
@@ -1040,8 +1041,8 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 		}
 	}
 
-	private tokenRe?: RegExp;
-	private nonTokenRe?: RegExp;
+	public tokenRe?: RegExp;
+	public nonTokenRe?: RegExp;
 
 	/**
 	 * Given a starting row and column, this method returns the `Range` of the first word boundary it finds.
@@ -2641,8 +2642,8 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 			}
 		}
 
-		if (this.lineWidgets && this.lineWidgets[row] && this.lineWidgets[row].rowsAbove)
-			screenRow += this.lineWidgets[row].rowsAbove!;
+		if (this.lineWidgets && this.lineWidgets[row] && this.lineWidgets[row]!.rowsAbove)
+			screenRow += this.lineWidgets[row]!.rowsAbove!;
 
 		return {
 			row: screenRow,
@@ -2670,7 +2671,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 		return this.documentToScreenPosition(docRow, docColumn).row;
 	}
 
-	private lineWidgets?: Ace.LineWidget[];
+	public lineWidgets?: (LineWidget|undefined)[];
 
 	/**
 	 * Returns the length of the screen.
@@ -2826,11 +2827,9 @@ function isFullWidth(c: number) {
 		c >= 0xFF01 && c <= 0xFF60 ||
 		c >= 0xFFE0 && c <= 0xFFE6;
 }
-// require("./edit_session/folding").Folding.call(EditSession.prototype);
-// require("./edit_session/bracket_match").BracketMatch.call(EditSession.prototype);
 
-Folding.call(EditSession.prototype);
-BracketMatch.call(EditSession.prototype);
+Folding.call(EditSession.prototype); // mix in folding functions
+BracketMatch.call(EditSession.prototype); // mix in bracket matching functions
 
 config.defineOptions(EditSession.prototype, "session", {
 	wrap: {
@@ -2838,7 +2837,7 @@ config.defineOptions(EditSession.prototype, "session", {
 		 * @param {string | boolean | number} value
 		 * @this {EditSession}
 		 */
-		set: function(value: string | boolean | number) {
+		set: function(this: EditSession, value: string | boolean | number) {
 			if (!value || value == "off")
 				value = false;
 			else if (value == "free")
@@ -2854,7 +2853,7 @@ config.defineOptions(EditSession.prototype, "session", {
 			if (!value) {
 				this.setUseWrapMode(false);
 			} else {
-				var col = typeof value == "number" ? value : null;
+				var col = typeof value == "number" ? value : 0;
 				this.setWrapLimitRange(col, col);
 				this.setUseWrapMode(true);
 			}
@@ -2876,7 +2875,7 @@ config.defineOptions(EditSession.prototype, "session", {
 		 * @param {"code"|"text"|"auto"|boolean} val
 		 * @this{EditSession}
 		 */
-		set: function(val: "code"|"text"|"auto"|boolean) {
+		set: function(this: EditSession, val: "code"|"text"|"auto"|boolean) {
 			val = val == "auto"
 				? this.$mode.type != "text"
 				: val != "text";
@@ -2894,7 +2893,7 @@ config.defineOptions(EditSession.prototype, "session", {
 		/**
 		 * @this{EditSession}
 		 */
-		set: function() {
+		set: function(this: EditSession) {
 			if (this.$useWrapMode) {
 				this.$useWrapMode = false;
 				this.setUseWrapMode(true);
@@ -2903,7 +2902,7 @@ config.defineOptions(EditSession.prototype, "session", {
 		initialValue: true
 	},
 	firstLineNumber: {
-		set: function() {this._signal("changeBreakpoint");},
+		set: function(this: EditSession) {this._signal("changeBreakpoint", {}, this);},
 		initialValue: 1
 	},
 	useWorker: {
@@ -2911,7 +2910,7 @@ config.defineOptions(EditSession.prototype, "session", {
 		 * @param {boolean} useWorker
 		 * @this{EditSession}
 		 */
-		set: function(useWorker: boolean) {
+		set: function(this: EditSession, useWorker: boolean) {
 			this.$useWorker = useWorker;
 
 			this.$stopWorker();
@@ -2926,35 +2925,29 @@ config.defineOptions(EditSession.prototype, "session", {
 		 * @param tabSize
 		 * @this{EditSession}
 		 */
-		set: function(tabSize: number|string) {
-			tabSize = parseInt(tabSize as string, 10);
-			if (tabSize > 0 && this.$tabSize !== tabSize) {
-				this.$modified = true;
-				this.$rowLengthCache = [];
-				this.$tabSize = tabSize;
-				this._signal("changeTabSize");
-			}
+		set: function(this: EditSession, tabSize: number) {
+			this.setTabSize(tabSize);
 		},
 		initialValue: 4,
 		handlesSet: true
 	},
 	navigateWithinSoftTabs: {initialValue: false},
 	foldStyle: {
-		set: function(val: string) {this.setFoldStyle(val);},
+		set: function(this: EditSession, val: string) {this.setFoldStyle(val);},
 		handlesSet: true
 	},
 	overwrite: {
-		set: function(val: boolean) {this._signal("changeOverwrite");},
+		set: function(this: EditSession, val: boolean) {this._signal("changeOverwrite", val, this);},
 		initialValue: false
 	},
 	newLineMode: {
-		set: function(val: string) {this.doc.setNewLineMode(val);},
-		get: function() {return this.doc.getNewLineMode();},
+		set: function(this: EditSession, val: NewLineMode) {this.doc.setNewLineMode(val);},
+		get: function(this: EditSession) {return this.doc.getNewLineMode();},
 		handlesSet: true
 	},
 	mode: {
-		set: function(val: string) { this.setMode(val); },
-		get: function() { return this.$modeId; },
+		set: function(this: EditSession, val: string) { this.setMode(val); },
+		get: function(this: {$modeId: string}) { return this.$modeId; },
 		handlesSet: true
 	}
 });

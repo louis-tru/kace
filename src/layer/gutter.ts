@@ -65,7 +65,7 @@ export type Annotation = {
 export class Gutter extends EventEmitter<GutterEvents> {
 	private $fixedWidth = false;
 	private $highlightGutterLine = true;
-	private $renderer?: GutterRenderer;
+	public $renderer?: GutterRenderer;
 	private $showLineNumbers = true;
 	private $showFoldWidgets = true;
 	public $showCursorMarker: boolean | null | string;
@@ -89,7 +89,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 		this.$showCursorMarker = null;
 		// this.element = dom.createElement("div");
 		this.element = new Morph(parentEl.window);
-		this.element.class = ["ace_layer', 'ace_gutter-layer"];
+		this.element.class = ["ace_layer", "ace_gutter-layer"];
 		this.element.style.layout = 'free'; // absolute positioning of children
 		parentEl.append(this.element);
 		this.setShowFoldWidgets(this.$showFoldWidgets);
@@ -201,7 +201,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 		var firstRow = config.firstRow;
 		var lastRow = Math.min(config.lastRow + config.gutterOffset,  // needed to compensate for hor scollbar
 			session.getLength() - 1);
-			
+
 		this.oldLastRow = lastRow;
 		this.config = config;
 		
@@ -269,8 +269,9 @@ export class Gutter extends EventEmitter<GutterEvents> {
 		gutterWidth += padding.left + padding.right;
 		if (gutterWidth !== this.gutterWidth && !isNaN(gutterWidth)) {
 			this.gutterWidth = gutterWidth;
-			/**@type{any}*/(this.element.parent!).style.width = 
-			this.element.style.width = Math.ceil(this.gutterWidth);
+			/**@type{any}*/
+			(this.element.parent!).style.width =
+				this.element.style.width = Math.ceil(this.gutterWidth);
 			this._signal("changeGutterWidth", gutterWidth, this);
 		}
 	}
@@ -339,9 +340,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 		var lineTop = session.documentToScreenRow(pos) * config.lineHeight;
 		var top = lineTop - (screenPage * lines.canvasHeight);
 
-		// dom.setStyle(this.$highlightElement.style, "height", config.lineHeight + "px");
 		this.$highlightElement.style.height = config.lineHeight;
-		// dom.setStyle(this.$highlightElement.style, "top", top + "px");
 		this.$highlightElement.style.marginTop = top;
 	}
 
@@ -451,7 +450,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 		var foldWidgets = this.$showFoldWidgets && session.foldWidgets;
 		var foldStart = fold ? fold.start.row : Number.MAX_VALUE;
 		
-		var lineHeight = config.lineHeight;// + "px";
+		var lineHeight = config.lineHeight;
 
 		var className = this.$useSvgGutterIcons ? "ace_gutter-cell_svg-icons " : "ace_gutter-cell ";
 		var iconClassName = this.$useSvgGutterIcons ? "ace_icon_svg" : "ace_icon";
@@ -664,9 +663,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 
 		if (element.class.join(' ') != className)
 			element.class = className.split(' ');
-		// dom.setStyle(cell.element.style, "height", this.$lines.computeLineHeight(row, config, session) + "px");
 		cell.element.style.height = this.$lines.computeLineHeight(row, config, session);
-		// dom.setStyle(cell.element.style, "top", this.$lines.computeLineTop(row, config, session) + "px");
 		cell.element.style.marginTop = this.$lines.computeLineTop(row, config, session);
 
 		cell.text = rowText;
@@ -749,7 +746,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 	 * @param {any} cell - Gutter cell 
 	 * @experimental
 	 */
-	$showFoldWidget(row: number, cell: Cell) {
+	$showFoldWidget(row: number, cell?: Cell) {
 		const rowCell = cell || this.$getGutterCell(row);
 		if (rowCell && rowCell.element) {
 			const foldWidget = rowCell.element.foldWidget;
@@ -845,7 +842,7 @@ export class Gutter extends EventEmitter<GutterEvents> {
 	* @returns {void}
 	* @experimental
 	*/
-	$removeCustomWidget(row: number, cell: Cell) {
+	$removeCustomWidget(row: number, cell?: Cell) {
 		delete this.session.$gutterCustomWidgets[row];
 		this.$showFoldWidget(row,cell);
 
@@ -864,9 +861,9 @@ export class Gutter extends EventEmitter<GutterEvents> {
 			return {left: 0, right: 0};
 		const first = this.element.first as Box;
 		this.$padding = {left: 0, right: 0};
-		this.$padding.left = (first.borderWidthLeft || 0)
+		this.$padding.left = (first.borderLeftWidth || 0)
 			+ (first.paddingLeft || 0) + 1;
-		this.$padding.right = (first.borderWidthRight || 0)
+		this.$padding.right = (first.borderRightWidth || 0)
 			+ (first.paddingRight || 0);
 		return this.$padding;
 	}

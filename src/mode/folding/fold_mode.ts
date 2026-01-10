@@ -1,107 +1,108 @@
 "use strict";
 
-var Range = require("../../range").Range;
-
-var FoldMode = exports.FoldMode = function() {};
+import {Range} from "../../range";
+import type {EditSession} from "../../edit_session";
 
 export type FoldWidget = "start" | "end" | ""
 
 export interface FoldMode {
-    foldingStartMarker: RegExp;
-    foldingStopMarker?: RegExp;
+	foldingStartMarker: RegExp;
+	foldingStopMarker?: RegExp;
 
-    getFoldWidget(session: EditSession, foldStyle: string, row: number): FoldWidget;
+	getFoldWidget(session: EditSession, foldStyle: string, row: number): FoldWidget;
 
-    getFoldWidgetRange(session: EditSession, foldStyle: string, row: number): Range | undefined;
+	getFoldWidgetRange(session: EditSession, foldStyle: string, row: number): Range | undefined;
 
-    indentationBlock(session: EditSession, row: number, column?: number): Range | undefined;
+	indentationBlock(session: EditSession, row: number, column?: number): Range | undefined;
 
-    openingBracketBlock(session: EditSession, bracket: string, row: number, column: number, typeRe?: RegExp): Range | undefined;
+	openingBracketBlock(session: EditSession, bracket: string, row: number, column: number, typeRe?: RegExp): Range | undefined;
 
-    closingBracketBlock(session: EditSession, bracket: string, row: number, column: number, typeRe?: RegExp): Range | undefined;
+	closingBracketBlock(session: EditSession, bracket: string, row: number, column: number, typeRe?: RegExp): Range | undefined;
 }
 
-(function() {
+export class FoldMode {};
 
-    this.foldingStartMarker = null;
-    this.foldingStopMarker = null;
+(function(this: FoldMode) {
 
-    // must return "" if there's no fold, to enable caching
-    this.getFoldWidget = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        if (this.foldingStartMarker.test(line))
-            return "start";
-        if (foldStyle == "markbeginend"
-                && this.foldingStopMarker
-                && this.foldingStopMarker.test(line))
-            return "end";
-        return "";
-    };
+	// this.foldingStartMarker = null;
+	// this.foldingStopMarker = null;
 
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        return null;
-    };
+	// must return "" if there's no fold, to enable caching
+	this.getFoldWidget = function(session, foldStyle, row) {
+		var line = session.getLine(row);
+		if (this.foldingStartMarker.test(line))
+			return "start";
+		if (foldStyle == "markbeginend"
+				&& this.foldingStopMarker
+				&& this.foldingStopMarker.test(line))
+			return "end";
+		return "";
+	};
 
-    this.indentationBlock = function(session, row, column) {
-        var re = /\S/;
-        var line = session.getLine(row);
-        var startLevel = line.search(re);
-        if (startLevel == -1)
-            return;
+	// this.getFoldWidgetRange = function(session, foldStyle, row) {
+	// 	return null;
+	// };
 
-        var startColumn = column || line.length;
-        var maxRow = session.getLength();
-        var startRow = row;
-        var endRow = row;
+	this.indentationBlock = function(session, row, column) {
+		var re = /\S/;
+		var line = session.getLine(row);
+		var startLevel = line.search(re);
+		if (startLevel == -1)
+			return;
 
-        while (++row < maxRow) {
-            var level = session.getLine(row).search(re);
+		var startColumn = column || line.length;
+		var maxRow = session.getLength();
+		var startRow = row;
+		var endRow = row;
 
-            if (level == -1)
-                continue;
+		while (++row < maxRow) {
+			var level = session.getLine(row).search(re);
 
-            if (level <= startLevel) {
-                var token = session.getTokenAt(row, 0);
-                if (!token || token.type !== "string")
-                    break;
-            }
+			if (level == -1)
+				continue;
 
-            endRow = row;
-        }
+			if (level <= startLevel) {
+				var token = session.getTokenAt(row, 0);
+				if (!token || token.type !== "string")
+					break;
+			}
 
-        if (endRow > startRow) {
-            var endColumn = session.getLine(endRow).length;
-            return new Range(startRow, startColumn, endRow, endColumn);
-        }
-    };
+			endRow = row;
+		}
 
-    this.openingBracketBlock = function(session, bracket, row, column, typeRe) {
-        var start = {row: row, column: column + 1};
-        var end = session.$findClosingBracket(bracket, start, typeRe);
-        if (!end)
-            return;
+		if (endRow > startRow) {
+			var endColumn = session.getLine(endRow).length;
+			return new Range(startRow, startColumn, endRow, endColumn);
+		}
+	};
 
-        var fw = session.foldWidgets[end.row];
-        if (fw == null)
-            fw = session.getFoldWidget(end.row);
+	this.openingBracketBlock = function(session, bracket, row, column, typeRe) {
+		var start = {row: row, column: column + 1};
+		var end = session.$findClosingBracket(bracket, start, typeRe);
+		if (!end)
+			return;
 
-        if (fw == "start" && end.row > start.row) {
-            end.row --;
-            end.column = session.getLine(end.row).length;
-        }
-        return Range.fromPoints(start, end);
-    };
+		var fw = session.foldWidgets![end.row];
+		if (fw == null)
+			fw = session.getFoldWidget(end.row);
 
-    this.closingBracketBlock = function(session, bracket, row, column, typeRe) {
-        var end = {row: row, column: column};
-        var start = session.$findOpeningBracket(bracket, end);
+		if (fw == "start" && end.row > start.row) {
+			end.row --;
+			end.column = session.getLine(end.row).length;
+		}
+		return Range.fromPoints(start, end);
+	};
 
-        if (!start)
-            return;
+	this.closingBracketBlock = function(session, bracket, row, column, typeRe) {
+		var end = {row: row, column: column};
+		var start = session.$findOpeningBracket(bracket, end);
 
-        start.column++;
-        end.column--;
+		if (!start)
+			return;
 
-        return  Range.fromPoints(start, end);
-    };
+		start.column++;
+		end.column--;
+
+		return  Range.fromPoints(start, end);
+	};
 }).call(FoldMode.prototype);

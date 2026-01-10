@@ -77,7 +77,6 @@ class Config extends AppConfig {
 			options[key] = value;
 		else if (this.setDefaultValue("", key, value) == false)
 			throw new Error("Unknown config key: " + key);
-		// TODO ...
 		// if (key == "useStrictCSP")
 		// 	dom.useStrictCSP(value);
 	};
@@ -218,4 +217,7 @@ class Config extends AppConfig {
 	version = "1.43.5";
 }
 
-export default new Config();
+const Default = new Config();
+
+module.exports = exports = Default;
+export default Default;

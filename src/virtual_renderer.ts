@@ -1,9 +1,6 @@
 "use strict";
-/**
- * @typedef {import("./edit_session").EditSession} EditSession
- * @typedef {import("../ace-internal").Ace.Point} Point
- * @typedef {import("../ace-internal").Ace.Theme} Theme
- */
+
+import util from 'quark/util';
 import * as lang from "./lib/lang";
 import config from "./config";
 import {Gutter as GutterLayer} from "./layer/gutter";
@@ -11,23 +8,33 @@ import {Marker as MarkerLayer} from "./layer/marker";
 import {Text as TextLayer} from "./layer/text";
 import {Cursor as CursorLayer} from "./layer/cursor";
 import {HScrollBar,VScrollBar} from "./scrollbar";
-// import {HScrollBar as HScrollBarCustom, VScrollBar as VScrollBarCustom} from "./scrollbar_custom";
 import {RenderLoop} from "./renderloop";
 import {FontMetrics} from "./layer/font_metrics";
 import {EventEmitter} from "./lib/event_emitter";
 import type {LayerConfig} from "./layer/lines";
-// import {Decorator} from "./layer/decorators";
+import type {Range} from "./range";
 import {Ace} from "../ace-internal";
 import qk, {Window, Morph, Box, Textarea, Text, Label, StyleSheets} from "quark";
-import util from 'quark/util';
-
 import {isTextToken} from "./layer/text_util";
 import type { OptionsProvider } from "./lib/app_config";
 import { Vec2, CursorStyle } from "quark/types";
+import type { LineWidget } from './line_widgets';
+import './css/editor-css';
 
-// var editorCss = require("./css/editor-css");
-// dom.importCssString(editorCss, "ace_editor.css", false);
-import './css/editor_css';
+export type Composition = {
+	markerRange: Range; cssStyle?: StyleSheets; useTextareaForIME?: boolean; markerId?: number;
+}
+
+export interface VirtualRendererEvents {
+	"afterRender": (e: any, emitter: VirtualRenderer) => void;
+	"beforeRender": (e: any, emitter: VirtualRenderer) => void;
+	"themeLoaded": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
+	"themeChange": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
+	"scrollbarVisibilityChanged": (e: undefined, emitter: VirtualRenderer) => void;
+	"changeCharacterSize": (e: any, emitter: VirtualRenderer) => void;
+	"resize": (e: any, emitter: VirtualRenderer) => void;
+	"autosize": (e: undefined, emitter: VirtualRenderer) => void;
+}
 
 export interface VirtualRendererOptions {
 	animatedScroll: boolean;
@@ -59,30 +66,15 @@ export interface VirtualRendererOptions {
 	useResizeObserver: boolean;
 }
 
-export interface VirtualRendererEvents {
-	"afterRender": (e: any, emitter: VirtualRenderer) => void;
-	"beforeRender": (e: any, emitter: VirtualRenderer) => void;
-	"themeLoaded": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
-	"themeChange": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
-	"scrollbarVisibilityChanged": (e: undefined, emitter: VirtualRenderer) => void;
-	"changeCharacterSize": (e: any, emitter: VirtualRenderer) => void;
-	"resize": (e: any, emitter: VirtualRenderer) => void;
-	"autosize": (e: undefined, emitter: VirtualRenderer) => void;
-}
-
 export interface VirtualRenderer extends
-	EventEmitter<VirtualRendererEvents>,
-	OptionsProvider<VirtualRendererOptions>
-{
-	$customScrollbar?: boolean,
+		EventEmitter<VirtualRendererEvents>, OptionsProvider<VirtualRendererOptions> {
 	$extraHeight?: number,
 	$showGutter?: boolean,
 	$showPrintMargin?: boolean,
 	$printMarginColumn?: number,
 	$animatedScroll?: boolean,
 	$isMousePressed?: boolean,
-	// textarea: HTMLTextAreaElement,
-	textarea: { morph: Morph, text: Textarea }, // TextArea and Morph ??
+	textarea: Textarea, // TextArea
 	$hScrollBarAlwaysVisible?: boolean,
 	$vScrollBarAlwaysVisible?: boolean
 	$maxLines?: number,
@@ -108,16 +100,15 @@ export interface VirtualRenderer extends
  * @related editor.renderer
  **/
 export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
-	public container: Text;
-	private $gutter: Morph;
-	public scroller: Morph;
+	readonly container: Text;
+	public $gutter: Text;
+	public scroller: Text;
 	public content: Morph;
-	private $gutterLayer: GutterLayer;
+	public $gutterLayer: GutterLayer;
 	private $markerBack: MarkerLayer;
 	public $textLayer: TextLayer;
 	private $markerFront: MarkerLayer;
-	private $cursorLayer: CursorLayer;
-	// Indicates whether the horizontal scrollbar is visible
+	public $cursorLayer: CursorLayer;
 	private $horizScroll = false;
 	private $vScroll = false;
 	public scrollBar: VScrollBar;
@@ -169,9 +160,9 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		h: 0
 	};
 
-	private $keepTextAreaAtCursor: boolean = !ace.env.iOS;
-	private $loop: RenderLoop;
-	private $scrollAnimation?: {from: number, to: number, steps: number[]} | null;
+	public $keepTextAreaAtCursor: boolean = !ace.env.iOS;
+	public $loop: RenderLoop;
+	public $scrollAnimation?: {from: number, to: number, steps: number[]} | null;
 	private $padding: number = 0;
 	public gutterWidth: number = 0;
 
@@ -194,29 +185,28 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		}
 		const window = this.window = this.container.window;
 
-		// dom.addCssClass(this.container, "ace_editor");
-		this.container.class = ['ace_editor'];
+		this.container.cssclass.add('ace_editor');
 		this.container.style.layout = 'free'; // Use absolute free layout for all children
-		// if (dom.HI_DPI)
-			// dom.addCssClass(this.container, "ace_hidpi");
+		this.container.data = {};
 
 		this.setTheme(theme||'');
-		// if (config.get("useStrictCSP") == null)
-		// 	config.set("useStrictCSP", false);
 
-		this.$gutter = new Morph(window);
+		this.$gutter = new Text(window);
+		this.$gutter.style.layout = 'free';
 		this.$gutter.class = ["ace_gutter"];
-		this.container.append(this.$gutter);
 		this.$gutter.data = {'aria-hidden': true};
+		this.container.append(this.$gutter);
 
-		this.scroller = new Morph(window);
+		this.scroller = new Text(window);
 		this.scroller.class = ["ace_scroller"];
-		this.scroller.style.layout = 'free'; // absolute free layout
-
+		this.scroller.style = { layout: 'free', width: 'match', height: 'match', align: 'end' };
+		this.scroller.data = {};
 		this.container.append(this.scroller);
+
 		this.content = new Morph(window);
 		this.content.class = ["ace_content"];
 		this.content.style.layout = 'free'; // absolute free layout
+		this.content.data = {};
 		this.scroller.append(this.content);
 
 		this.$gutterLayer = new GutterLayer(this.$gutter);
@@ -315,7 +305,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 		this.$loop.schedule(this.CHANGE_FULL);
 		this.session.$setFontMetrics(this.$fontMetrics);
-		// this.scrollBarH.scrollLeft = this.scrollBarV.scrollTop = null;
 		this.scrollBarH.scrollLeft = this.scrollBarV.scrollTop = -1;
 
 		this.onChangeNewLineMode = this.onChangeNewLineMode.bind(this);
@@ -381,6 +370,10 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		this.$textLayer.onChangeTabSize();
 	}
 
+	$onChangeTabSize = () => {
+		this.onChangeTabSize();
+	}
+
 	/**
 	 * Triggers a full update of the text, for all the rows.
 	 **/
@@ -435,24 +428,25 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		// `|| el.scrollHeight` is required for autosizing editors on ie
 		// where elements with clientHeight = 0 also have clientWidth = 0
 		var el = this.container;
+		var clSize = el.clientSize;
 		if (!height)
-			// TODO ...
-			// height = el.clientHeight || el.scrollHeight;
-			height = el.clientSize.y;
-		if (!height && this.$maxLines && this.lineHeight > 1) {
-			// if we are supposed to fit to content set height at least to 1
-			// so that render does not exit early before calling $autosize
-			if (!el.style.height || el.style.height == 0) {
-				el.style.height = 1;
-				// TODO ...
-				//height = el.clientHeight || el.scrollHeight;
-				height = el.clientSize.y;
-			}
-		}
+			height = clSize.height; // el.clientHeight || el.scrollHeight;
+		//
+		// NOTE:
+		// ACE uses a 1px height hack here to force browser reflow and unlock autosize.
+		// Qk has explicit layout passes, so this hack is intentionally disabled.
+		// Autosize should be triggered after layout / content changes instead.
+		//
+		// if (!height && this.$maxLines && this.lineHeight > 1) {
+		// 	// if we are supposed to fit to content set height at least to 1
+		// 	// so that render does not exit early before calling $autosize
+		// 	if (!el.style.height || el.style.height == 0) {
+		// 		el.style.height = 1;
+		// 		height = clSize.height; // el.clientHeight || el.scrollHeight;
+		// 	}
+		// }
 		if (!width)
-			// TODO ...
-			// width = el.clientWidth || el.scrollWidth;
-			width = el.clientSize.x;
+			width = clSize.width; // el.clientWidth || el.scrollWidth;
 		var changes = this.$updateCachedSize(force, gutterWidth, width, height);
 
 		if (this.$resizeTimer) this.$resizeTimer.cancel();
@@ -472,11 +466,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			this.resizing = 0;
 		// reset cached values on scrollbars, needs to be removed when switching to non-native scrollbars
 		// see https://github.com/ajaxorg/ace/issues/2195
-		// this.scrollBarH.scrollLeft = this.scrollBarV.scrollTop = null;
 		this.scrollBarH.scrollLeft = this.scrollBarV.scrollTop = -1;
-		// if (this.$customScrollbar) {
-		// 	this.$updateCustomScrollbar(true);
-		// }
 	}
 
 	/**
@@ -485,7 +475,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param [width]
 	 * @param [height]
 	 * @return {number}
-
 	 */
 	$updateCachedSize(force?: boolean, gutterWidth?: number, width?: number, height: number = 0) {
 		height -= (this.$extraHeight || 0);
@@ -506,7 +495,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 				size.scrollerHeight -= this.scrollBarH.getHeight();
 
 			this.scrollBarV.setHeight(size.scrollerHeight);
-			this.scrollBarV.element.style.bottom = this.scrollBarH.getHeight() + "px";
 
 			changes = changes | this.CHANGE_SCROLL;
 		}
@@ -520,25 +508,18 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 			this.gutterWidth = gutterWidth;
 
-			// dom.setStyle(this.scrollBarH.element.style, "left", gutterWidth + "px");
-			this.scrollBarH.element.style.x = gutterWidth;
-			// dom.setStyle(this.scroller.style, "left", gutterWidth + this.margin.left + "px");
-			this.scroller.x = gutterWidth + this.margin.left;
 			size.scrollerWidth = Math.max(0, width - gutterWidth - this.scrollBarV.getWidth() - this.margin.h);
-			// dom.setStyle(this.$gutter.style, "left", this.margin.left + "px");
-			this.$gutter.x = this.margin.left;
+			this.$gutter.marginLeft = this.margin.left;
 
-			var right = this.scrollBarV.getWidth();// + "px";
-			// dom.setStyle(this.scrollBarH.element.style, "right", right);
-			// TODO ...
-			this.scrollBarH.element.x = right;
-			// dom.setStyle(this.scroller.style, "right", right);
-			this.scroller.x = right;
-			// dom.setStyle(this.scroller.style, "bottom", this.scrollBarH.getHeight());
-			// TODO ... bottom => y ???
-			this.scroller.y = this.scrollBarH.getHeight();
+			var right = this.scrollBarV.getWidth();
 
+			this.scrollBarH.element.style.marginLeft = gutterWidth;
+			this.scrollBarH.element.style.marginRight = right;
 			this.scrollBarH.setWidth(size.scrollerWidth);
+
+			this.scroller.style.marginLeft = gutterWidth + this.margin.left;
+			this.scroller.style.marginRight = right;
+			this.scroller.style.marginBottom = this.scrollBarH.getHeight();
 
 			if (this.session && this.session.getUseWrapMode() && this.adjustWrapLimit() || force) {
 				changes |= this.CHANGE_FULL;
@@ -794,7 +775,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		return this.container;
 	}
 
-	private $composition?: {markerRange?: Ace.Range, useTextareaForIME?: boolean, markerId?: number, cssStyle?: StyleSheets} | null;
+	private $composition?: Composition;
 
 	// move text input over the cursor
 	// this is required for IME
@@ -802,11 +783,11 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 */
 	$moveTextAreaToCursor() {
 		if (this.$isMousePressed) return;
-		var style = this.textarea.morph.style;
 		var composition = this.$composition;
 		if (!this.$keepTextAreaAtCursor && !composition) {
 			// dom.translate(this.textarea, -100, 0);
-			this.textarea.morph.x = -100;
+			this.textarea.marginLeft = -100;
+			this.textarea.marginTop = 0;
 			return;
 		}
 		var pixelPos = this.$cursorLayer.$pixelPos;
@@ -823,7 +804,8 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		var h = composition && composition.useTextareaForIME || ace.env.mobile ? this.lineHeight : 1;
 		if (posTop < 0 || posTop > config.height - h) {
 			// dom.translate(this.textarea, 0, 0);
-			this.textarea.morph.translate = Vec2.new(0, 0);
+			this.textarea.marginLeft = 0;
+			this.textarea.marginTop = 0;
 			return;
 		}
 
@@ -834,7 +816,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		}
 		else {
 			if (composition.useTextareaForIME) {
-				var val = this.textarea.text.value;
+				var val = this.textarea.value;
 				w = this.characterWidth * (this.session.$getStringScreenWidth(val)[0]);
 			}
 			else {
@@ -849,11 +831,11 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		posLeft += this.gutterWidth + this.margin.left;
 
 		// dom.setStyle(style, "height", h + "px");
-		style.height = h;
+		this.textarea.style.height = h;
 		// dom.setStyle(style, "width", w + "px");
-		style.width = w;
+		this.textarea.style.width = w;
 		// dom.translate(this.textarea, Math.min(posLeft, this.$size.scrollerWidth - w), Math.min(posTop, maxTop));
-		style.translate = Vec2.new(Math.min(posLeft, this.$size.scrollerWidth - w), Math.min(posTop, maxTop));
+		this.textarea.style.translate = Vec2.new(Math.min(posLeft, this.$size.scrollerWidth - w), Math.min(posTop, maxTop));
 	}
 
 	/**
@@ -989,7 +971,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			scrollHeight -= (scrollerHeight - this.lineHeight) * this.$scrollPastEnd;
 			if (this.scrollTop > scrollHeight - scrollerHeight) {
 				scrollHeight = this.scrollTop + scrollerHeight;
-				// this.scrollBarV.scrollTop = null;
 				this.scrollBarV.scrollTop = -1;
 			}
 		}
@@ -1008,8 +989,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	unfreeze() {
 		this.$frozen = false;
 	}
-
-	// private $scrollDecorator: Decorator;
 
 	/**
 	 *
@@ -1070,24 +1049,18 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			if (changes & this.CHANGE_H_SCROLL)
 				this.$updateScrollBarH();
 
-			// dom.translate(this.content, -this.scrollLeft, -config.offset);
 			this.content.translate = Vec2.new(-this.scrollLeft, -config.offset);
 
 			var width = config.width + 2 * this.$padding;
 			var height = config.minHeight;
-			// dom.setStyle(this.content.style, "width", width);
-			// dom.setStyle(this.content.style, "height", height);
 			this.content.style = { width, height };
 		}
 
 		// horizontal scrolling
 		if (changes & this.CHANGE_H_SCROLL) {
-			// dom.translate(this.content, -this.scrollLeft, -config.offset);
 			this.content.translate = Vec2.new(-this.scrollLeft, -config.offset);
-			// this.scroller.className = this.scrollLeft <= 0 ? "ace_scroller " : "ace_scroller ace_scroll-left ";
 			this.scroller.class = this.scrollLeft <= 0 ? ["ace_scroller"] : ["ace_scroller", "ace_scroll-left"];
 			if (this.enableKeyboardAccessibility)
-				// this.scroller.className += this.keyboardFocusClassName;
 				this.scroller.cssclass.add(this.keyboardFocusClassName!);
 		}
 
@@ -1097,9 +1070,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			this.$textLayer.update(config);
 			if (this.$showGutter)
 				this.$gutterLayer.update(config);
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 			this.$markerBack.update(config);
 			this.$markerFront.update(config);
 			this.$cursorLayer.update(config);
@@ -1122,9 +1092,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 				else
 					this.$gutterLayer.scrollLines(config);
 			}
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 			this.$markerBack.update(config);
 			this.$markerFront.update(config);
 			this.$cursorLayer.update(config);
@@ -1138,31 +1105,18 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			this.$textLayer.update(config);
 			if (this.$showGutter)
 				this.$gutterLayer.update(config);
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 		}
 		else if (changes & this.CHANGE_LINES) {
 			if (this.$updateLines() || (changes & this.CHANGE_GUTTER) && this.$showGutter)
 				this.$gutterLayer.update(config);
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 		}
 		else if (changes & this.CHANGE_TEXT || changes & this.CHANGE_GUTTER) {
 			if (this.$showGutter)
 				this.$gutterLayer.update(config);
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 		}
 		else if (changes & this.CHANGE_CURSOR) {
 			if (this.$highlightGutterLine)
-				//// @ts-expect-error TODO: potential wrong param
 				this.$gutterLayer.updateLineHighlight(/*config*/);
-			// if (this.$customScrollbar) {
-			// 	this.$scrollDecorator.$updateDecorators(config);
-			// }
 		}
 
 		if (changes & this.CHANGE_CURSOR) {
@@ -1618,7 +1572,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {() => void} [callback] Function to be called after the animation has finished
 
 	 **/
-	scrollToLine(line: number, center: boolean, animate: boolean, callback?: () => void) {
+	scrollToLine(line: number, center: boolean, animate?: boolean, callback?: () => void) {
 		var pos = this.$cursorLayer.getPixelPosition({row: line, column: 0});
 		var offset = pos.top;
 		if (center)
@@ -1856,25 +1810,24 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {Object} composition
 
 	 **/
-	showComposition(composition: { markerRange: Ace.Range; cssStyle?: StyleSheets; useTextareaForIME?: boolean; markerId?: number; }) {
+	showComposition(composition: Composition) {
 		this.$composition = composition;
 		if (!composition.cssStyle) {
 			// composition.cssText = this.textarea.style.cssText;
 			composition.cssStyle = {
-				x: this.textarea.morph.x,
-				y: this.textarea.morph.y,
-				width: this.textarea.morph.width,
-				height: this.textarea.morph.height,
+				marginLeft: this.textarea.marginLeft,
+				marginTop: this.textarea.marginTop,
+				width: this.textarea.width,
+				height: this.textarea.height,
 			}
 		}
 		if (composition.useTextareaForIME == undefined)
 			composition.useTextareaForIME = this.$useTextareaForIME;
 
 		if (this.$useTextareaForIME) {
-			// TODO ...
-			// dom.addCssClass(this.textarea, "ace_composition");
-			this.textarea.morph.cssclass.add("ace_composition");
+			this.textarea.cssclass.add("ace_composition");
 			// this.textarea.style.cssText = "";
+			this.textarea.style = {marginLeft: 0, marginTop: 0, width: 'auto', height: 'auto'};
 			this.$moveTextAreaToCursor();
 			this.$cursorLayer.element.visible = false;
 		}
@@ -1907,25 +1860,22 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		if (this.$composition.markerId)
 			this.session.removeMarker(this.$composition.markerId);
 
-		// TODO ...
-		// dom.removeCssClass(this.textarea, "ace_composition");
-		this.textarea.morph.cssclass.remove("ace_composition");
-		// this.textarea.style.cssText = this.$composition.cssText;
-		this.textarea.morph.style = this.$composition.cssStyle!;
+		this.textarea.cssclass.remove("ace_composition");
+		this.textarea.style = this.$composition.cssStyle!;
 		var cursor = this.session.selection.cursor;
 		this.removeExtraToken(cursor.row, cursor.column);
-		this.$composition = null;
+		this.$composition = void 0;
 		this.$cursorLayer.element.visible = true;
 	}
 
 	private $ghostText?: { text: string; position: { row: number; column: number } } | null;
-	private $ghostTextWidget?: Ace.LineWidget | null;
+	private $ghostTextWidget?: LineWidget | null;
 
 	/**
 	 * @param {string} text
 	 * @param {Point} [position]
 	 */
-	setGhostText(text: string, position: Ace.Point) {
+	setGhostText(text: string, position?: Ace.Point) {
 		var cursor = this.session.selection.cursor;
 		var insertPosition = position || { row: cursor.row, column: cursor.column };
 
@@ -2149,7 +2099,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		_self._emit('themeChange',{theme}, this);
 
 		if (!theme || typeof theme == "string") {
-			//// @ts-ignore
 			var moduleName = theme || this.$options.theme.initialValue; // default theme
 			// config.loadModule(["theme", moduleName], afterLoad);
 			import(moduleName).then(afterLoad);
@@ -2174,7 +2123,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			// 	_self.container
 			// );
 			if (_self.theme)
-				// dom.removeCssClass(_self.container, _self.theme.cssClass);
 				_self.container.cssclass.remove(_self.theme.cssClass); // remove old theme class
 			/**@type {any}*/
 			var padding = "padding" in module ? module.padding!
@@ -2195,9 +2143,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			_self.$theme = module.cssClass;
 
 			_self.theme = module;
-			// dom.addCssClass(_self.container, module.cssClass);
 			_self.container.cssclass.add(module.cssClass);
-			// dom.setCssClass(_self.container, "ace_dark", module.isDark);
 			_self.container.cssclass[module.isDark ? "add" : "remove"]("ace_dark");
 
 			// force re-measure of the gutter width
@@ -2208,13 +2154,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 			_self._emit('themeLoaded', {theme:module}, _self);
 			cb && cb();
-
-			// workaround for safari not redrawing the editor
-			// https://github.com/ajaxorg/ace/issues/5569
-			// if (useragent.isSafari && _self.scroller) {
-			// 	_self.scroller.style.background = "red";
-			// 	_self.scroller.style.background = "";
-			// }
 		}
 	}
 
@@ -2249,7 +2188,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 *
 	 **/
 	unsetStyle(style: string) {
-		// dom.removeCssClass(this.container, style);
 		this.container.cssclass.remove(style);
 	}
 
@@ -2257,7 +2195,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {CursorStyle} style
 	 */
 	setCursorStyle(style: CursorStyle) {
-		// dom.setStyle(this.scroller.style, "cursor", style);
 		this.scroller.style.cursor = style;
 	}
 
@@ -2265,7 +2202,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {CursorStyle} cursorStyle A css cursor style
 	 **/
 	setMouseCursor(cursorStyle: CursorStyle) {
-		// dom.setStyle(this.scroller.style, "cursor", cursorStyle);
 		this.scroller.style.cursor = cursorStyle;
 	}
 
@@ -2282,63 +2218,16 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		this.$fontMetrics.destroy();
 		this.$cursorLayer.destroy();
 		this.removeAllListeners();
-		// this.container.textContent = "";
 		this.container.removeAllChild(); // Quark equivalent
 		this.setOption("useResizeObserver", false);
 	}
 
-	/**
-	 *
-	 * @param {boolean} [val]
-	 */
-	// $updateCustomScrollbar(val?: boolean) {
-	// 	var _self = this;
-	// 	// this.$horizScroll = this.$vScroll = null;
-	// 	this.$horizScroll = this.$vScroll = false;
-	// 	this.scrollBarV.element.remove(); // remove view
-	// 	this.scrollBarH.element.remove(); // remove view
-	// 	if (val === true) {
-	// 		/**@type {import("../ace-internal").Ace.VScrollbar}*/
-	// 		this.scrollBarV = new VScrollBarCustom(this.container, this);
-	// 		/**@type {import("../ace-internal").Ace.HScrollbar}*/
-	// 		this.scrollBarH = new HScrollBarCustom(this.container, this);
-	// 		this.scrollBarV.setHeight(this.$size.scrollerHeight);
-	// 		this.scrollBarH.setWidth(this.$size.scrollerWidth);
-
-	// 		this.scrollBarV.addEventListener("scroll", function (e) {
-	// 			if (!_self.$scrollAnimation) _self.session.setScrollTop(e.data - _self.scrollMargin.top);
-	// 		});
-	// 		this.scrollBarH.addEventListener("scroll", function (e) {
-	// 			if (!_self.$scrollAnimation) _self.session.setScrollLeft(e.data - _self.scrollMargin.left);
-	// 		});
-	// 		if (!this.$scrollDecorator) {
-	// 			this.$scrollDecorator = new Decorator(this.scrollBarV, this);
-	// 			this.$scrollDecorator.$updateDecorators();
-	// 		} else {
-	// 			this.$scrollDecorator.setScrollBarV(this.scrollBarV);
-	// 			this.$scrollDecorator.$updateDecorators();
-	// 		}
-	// 	}
-	// 	else {
-	// 		this.scrollBarV = new VScrollBar(this.container, this);
-	// 		this.scrollBarH = new HScrollBar(this.container, this);
-	// 		this.scrollBarV.addEventListener("scroll", function (e) {
-	// 			if (!_self.$scrollAnimation) _self.session.setScrollTop(e.data - _self.scrollMargin.top);
-	// 		});
-	// 		this.scrollBarH.addEventListener("scroll", function (e) {
-	// 			if (!_self.$scrollAnimation) _self.session.setScrollLeft(e.data - _self.scrollMargin.left);
-	// 		});
-	// 	}
-	// }
-
-	// private $resizeObserver?: ResizeObserver | null;
-	/**
-	 */
 	$addResizeObserver() {
-		// if (!window.ResizeObserver || this.$resizeObserver) return;
+		// if (!window.ResizeObserver || this.$resizeObserver)
+		// 	return;
 		// var self = this;
 		// this.$resizeTimer = lang.delayedCall(function() {
-		// 	if (!self.destroyed)  self.onResize();
+		// 	if (!self.destroyed) self.onResize();
 		// }, 50);
 		// this.$resizeObserver = new window.ResizeObserver(function(e) {
 		// 	var w = e[0].contentRect.width;
@@ -2353,6 +2242,30 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		// 	}
 		// });
 		// this.$resizeObserver.observe(this.container);
+	}
+
+	private placeholderNode?: Text;
+
+	$updatePlaceholder(placeholder: string = '') {
+		var hasValue = this.session && (this.$composition ||
+				this.session.getLength() > 1 || this.session.getLine(0).length > 0);
+		if (hasValue && this.placeholderNode) {
+			this.off("afterRender", this.$updatePlaceholder);
+			this.container.cssclass.remove("ace_hasPlaceholder");
+			this.placeholderNode.remove();
+			this.placeholderNode = void 0;
+		} else if (!hasValue && !this.placeholderNode) {
+			this.on("afterRender", this.$updatePlaceholder);
+			this.container.cssclass.add("ace_hasPlaceholder");
+			// var el = dom.createElement("div");
+			var el = new Text(this.window);
+			el.class = ["ace_placeholder"];
+			el.value = placeholder;
+			this.placeholderNode = el;
+			this.content.append(this.placeholderNode);
+		} else if (!hasValue && this.placeholderNode) {
+			this.placeholderNode.value = placeholder;
+		}
 	}
 
 	CHANGE_CURSOR = 1;
@@ -2373,42 +2286,34 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	useResizeObserver: {
-		/**
-		 * @param value
-		 * @this{VirtualRenderer}
-		 */
 		set: function(value: boolean) {
-			if (!value && this.$resizeObserver) {
-				this.$resizeObserver.disconnect();
-				this.$resizeTimer.cancel();
-				this.$resizeTimer = this.$resizeObserver = null;
-			} else if (value && !this.$resizeObserver) {
-				this.$addResizeObserver();
-			}
+			// if (!value && this.$resizeObserver) {
+			// 	this.$resizeObserver.disconnect();
+			// 	this.$resizeTimer.cancel();
+			// 	this.$resizeTimer = this.$resizeObserver = null;
+			// } else if (value && !this.$resizeObserver) {
+			// 	this.$addResizeObserver();
+			// }
 		}
 	},
 	animatedScroll: {initialValue: false},
 	showInvisibles: {
-		set: function(value: boolean) {
+		set: function(this: VirtualRenderer, value: boolean) {
 			if (this.$textLayer.setShowInvisibles(value))
 				this.$loop.schedule(this.CHANGE_TEXT);
 		},
 		initialValue: false
 	},
 	showPrintMargin: {
-		set: function() { this.$updatePrintMargin(); },
+		set: function(this: VirtualRenderer, ) { this.$updatePrintMargin(); },
 		initialValue: true
 	},
 	printMarginColumn: {
-		set: function() { this.$updatePrintMargin(); },
+		set: function(this: VirtualRenderer, ) { this.$updatePrintMargin(); },
 		initialValue: 80
 	},
 	printMargin: {
-		/**
-		 * @param val
-		 * @this{VirtualRenderer}
-		 */
-		set: function(val: boolean) {
+		set: function(this: VirtualRenderer, val: boolean) {
 			if (typeof val == "number")
 				this.$printMarginColumn = val;
 			this.$showPrintMargin = !!val;
@@ -2420,20 +2325,20 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	},
 	showGutter: {
 		set: function(show: boolean) {
-			this.$gutter.style.display = show ? "block" : "none";
+			this.$gutter.visibile = show;
 			this.$loop.schedule(this.CHANGE_FULL);
 			this.onGutterResize();
 		},
 		initialValue: true
 	},
 	useSvgGutterIcons: {
-		set: function(value: boolean){
+		set: function(this: VirtualRenderer, value: boolean){
 			this.$gutterLayer.$useSvgGutterIcons = value;
 		},
 		initialValue: false
 	},
 	showFoldedAnnotations: {
-		set: function(value: boolean) {
+		set: function(this: VirtualRenderer, value: boolean) {
 			this.$gutterLayer.$showFoldedAnnotations = value;
 		},
 		initialValue: false
@@ -2441,26 +2346,26 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	fadeFoldWidgets: {
 		set: function(show: boolean) {
 			// dom.setCssClass(this.$gutter, "ace_fade-fold-widgets", show);
-			(this.$gutter as Morph).cssclass[show ? "add" : "remove"]("ace_fade-fold-widgets");
+			(this.$gutter as Text).cssclass[show ? "add" : "remove"]("ace_fade-fold-widgets");
 		},
 		initialValue: false
 	},
 	showFoldWidgets: {
-		set: function(show: boolean) {
+		set: function(this: VirtualRenderer, show: boolean) {
 			this.$gutterLayer.setShowFoldWidgets(show);
 			this.$loop.schedule(this.CHANGE_GUTTER);
 		},
 		initialValue: true
 	},
 	displayIndentGuides: {
-		set: function(show: boolean) {
+		set: function(this: VirtualRenderer, show: boolean) {
 			if (this.$textLayer.setDisplayIndentGuides(show))
 				this.$loop.schedule(this.CHANGE_TEXT);
 		},
 		initialValue: true
 	},
 	highlightIndentGuides: {
-		set: function (show: boolean) {
+		set: function (this: VirtualRenderer, show: boolean) {
 			if (this.$textLayer.setHighlightIndentGuides(show) == true) {
 				this.$textLayer.$highlightIndentGuide();
 			}
@@ -2471,7 +2376,7 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 		initialValue: true
 	},
 	highlightGutterLine: {
-		set: function(shouldHighlight: boolean) {
+		set: function(this: VirtualRenderer, shouldHighlight: boolean) {
 			this.$gutterLayer.setHighlightGutterLine(shouldHighlight);
 			this.$loop.schedule(this.CHANGE_GUTTER);
 		},
@@ -2492,29 +2397,25 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 		initialValue: false
 	},
 	fontSize: {
-		set: function(size: number) {
+		set: function(this: VirtualRenderer, size: number) {
 			(this.container as Text).style.textSize = size;
 			this.updateFontSize();
 		},
 		initialValue: 12
 	},
 	fontFamily: {
-		set: function(name: string) {
+		set: function(this: VirtualRenderer, name: string) {
 			(this.container as Text).style.textFamily = name;
 			this.updateFontSize();
 		}
 	},
 	maxLines: {
-		set: function(val: number) {
+		set: function(this: VirtualRenderer, val: number) {
 			this.updateFull();
 		}
 	},
 	minLines: {
-		/**
-		 * @param val
-		 * @this{VirtualRenderer}
-		 */
-		set: function(val: number) {
+		set: function(this: any, val: number) {
 			if (!(this.$minLines < 0x1ffffffffffff))
 				this.$minLines = 0;
 			this.updateFull();
@@ -2527,11 +2428,7 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 		initialValue: 0
 	},
 	scrollPastEnd: {
-		/**
-		 * @param val
-		 * @this{VirtualRenderer}
-		 */
-		set: function(val: number) {
+		set: function(this: any, val: number) {
 			val = +val || 0;
 			if (this.$scrollPastEnd == val)
 				return;
@@ -2542,20 +2439,14 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 		handlesSet: true
 	},
 	fixedWidthGutter: {
-		set: function(val: boolean) {
+		set: function(this: /*VirtualRenderer*/any, val: boolean) {
 			this.$gutterLayer.$fixedWidth = !!val;
 			this.$loop.schedule(this.CHANGE_GUTTER);
 		}
 	},
-	// customScrollbar: {
-	// 	set: function(val: boolean) {
-	// 		this.$updateCustomScrollbar(val);
-	// 	},
-	// 	initialValue: false
-	// },
 	theme: {
-		set: function(val: string) { this.setTheme(val); },
-		get: function() { return this.$themeId || this.theme; },
+		set: function(this: VirtualRenderer, val: string) { this.setTheme(val); },
+		get: function(this: any) { return this.$themeId || this.theme; },
 		initialValue: "./theme/textmate",
 		handlesSet: true
 	},
@@ -2564,5 +2455,5 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	useTextareaForIME: {
 		// initialValue: !useragent.isMobile && !useragent.isIE
 		initialValue: !ace.env.mobile
-	}
+	},
 });

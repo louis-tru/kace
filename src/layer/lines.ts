@@ -55,7 +55,8 @@ export class Lines<El extends Box = CellElement> {
 	 * @param {LayerConfig} config
 	 */
 	moveContainer(config: LayerConfig) {
-		this.element.translate = Vec2.new(0, -((config.firstRowScreen * config.lineHeight) % this.canvasHeight) - config.offset * this.$offsetCoefficient);
+		this.element.y = -((config.firstRowScreen * config.lineHeight) % this.canvasHeight) - config.offset * this.$offsetCoefficient;
+		// this.element.marginTop = -((config.firstRowScreen * config.lineHeight) % this.canvasHeight) - config.offset * this.$offsetCoefficient;
 	}
 
 	/**
@@ -159,7 +160,6 @@ export class Lines<El extends Box = CellElement> {
 			if (initElement)
 				initElement(element);
 
-			// this.element.appendChild(element);
 			this.element.append(element);
 
 			cell = {

@@ -25,36 +25,55 @@ var impTab_RTL = [
 
 var LTR = 0, RTL = 1;
 
-var L = 0; /* left to right */
-var R = 1; /* right to left */
-var EN = 2; /* European digit */
-var AN = 3; /* Arabic-Indic digit */
-var ON = 4; /* neutral */
-var B = 5; /* block separator */
-var S = 6; /* segment separator */
-var AL = 7; /* Arabic Letter */
-var WS = 8; /* white space */
-var CS = 9; /* common digit separator */
-var ES = 10; /* European digit separator */
-var ET = 11; /* European digit terminator */
-var NSM = 12; /* Non Spacing Mark */
-var LRE = 13; /* LRE */
-var RLE = 14; /* RLE */
-var PDF = 15; /* PDF */
-var LRO = 16; /* LRO */
-var RLO = 17; /* RLO */
-var BN = 18; /* Boundary Neutral */
+export const L = 0; /* left to right */
+export const R = 1; /* right to left */
+export const EN = 2; /* European digit */
+const AN_ = 3; /* Arabic-Indic digit */
+const ON = 4; /* neutral */
+const B_ = 5; /* block separator */
+const S = 6; /* segment separator */
+const AL = 7; /* Arabic Letter */
+const WS = 8; /* white space */
+const CS = 9; /* common digit separator */
+const ES = 10; /* European digit separator */
+const ET = 11; /* European digit terminator */
+const NSM = 12; /* Non Spacing Mark */
+const LRE = 13; /* LRE */
+const RLE_ = 14; /* RLE */
+const PDF = 15; /* PDF */
+const LRO = 16; /* LRO */
+const RLO = 17; /* RLO */
+const BN = 18; /* Boundary Neutral */
+
+/* Strong LTR character (0 - even), regular width */
+// exports.L = L;
+/* Strong RTL character (1 - odd), Bidi width */
+// exports.R = R;
+/* European digit (2 - even), regular width */
+// exports.EN = EN;
+/* Neutral RTL-by-context character (3 - odd), regular width */
+export const ON_R = 3;
+/* Hindi (Arabic) digit (4 - even), Bidi width */
+export const AN = 4;
+/* Arabic LamAlef (5 - odd), Half Bidi width */
+export const R_H = 5;
+/* invisible EOL (6 - even), zero width */
+export const B = 6;
+/* invisible RLE (7 - odd), zero width */
+export const RLE = 7;
+
+export const DOT = "\xB7";
 
 var UnicodeTBL00 = [
-BN,BN,BN,BN,BN,BN,BN,BN,BN,S,B,S,WS,B,BN,BN,
-BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,B,B,B,S,
+BN,BN,BN,BN,BN,BN,BN,BN,BN,S,B_,S,WS,B_,BN,BN,
+BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,B_,B_,B_,S,
 WS,ON,ON,ET,ET,ET,ON,ON,ON,ON,ON,ES,CS,ES,CS,CS,
 EN,EN,EN,EN,EN,EN,EN,EN,EN,EN,CS,ON,ON,ON,ON,ON,
 ON,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,
 L,L,L,L,L,L,L,L,L,L,L,ON,ON,ON,ON,ON,
 ON,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,
 L,L,L,L,L,L,L,L,L,L,L,ON,ON,ON,ON,BN,
-BN,BN,BN,BN,BN,B,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,
+BN,BN,BN,BN,BN,B_,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,
 BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,BN,
 CS,ON,ET,ET,ET,ET,ON,ON,ON,ON,L,ON,ON,BN,ON,ON,
 ET,ET,EN,EN,ON,L,ON,ON,ON,EN,L,ON,ON,ON,ON,ON
@@ -63,16 +82,16 @@ ET,ET,EN,EN,ON,L,ON,ON,ON,EN,L,ON,ON,ON,ON,ON
 var UnicodeTBL20 = [
 WS,WS,WS,WS,WS,WS,WS,WS,WS,WS,WS,BN,BN,BN,L,R	,
 ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,
-ON,ON,ON,ON,ON,ON,ON,ON,WS,B,LRE,RLE,PDF,LRO,RLO,CS,
+ON,ON,ON,ON,ON,ON,ON,ON,WS,B_,LRE,RLE_,PDF,LRO,RLO,CS,
 ET,ET,ET,ET,ET,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,
 ON,ON,ON,ON,CS,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,
 ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,ON,WS
 ];
 
-function _computeLevels(chars, levels, len, charTypes) {
+function _computeLevels(chars: string[], levels: number[], len: number, charTypes: number[]) {
 	var impTab = dir ? impTab_RTL : impTab_LTR
 		, prevState = null, newClass = null, newLevel = null, newState = 0
-		, action = null, cond = null, condPos = -1, i = null, ix = null, classes = [];
+		, action = null, cond = null, condPos = -1, i = null, ix = null, classes: any[] = [];
 
 	if (!charTypes) {
 		for (i = 0, charTypes = []; i < len; i++) {
@@ -114,7 +133,7 @@ function _computeLevels(chars, levels, len, charTypes) {
 				condPos = -1;
 			}
 		}
-		if (charTypes[ix] == B){
+		if (charTypes[ix] == B_){
 			levels[ix] = 0;
 		}
 		hiLevel |= newLevel;
@@ -135,7 +154,7 @@ function _computeLevels(chars, levels, len, charTypes) {
 	}
 }
 
-function _invertLevel(lev, levels, _array) {
+function _invertLevel(lev: number, levels: number[], _array: any[]) {
 	if (hiLevel < lev){
 		return;
 	}
@@ -161,17 +180,17 @@ function _invertLevel(lev, levels, _array) {
 	}
 }
 
-function _getCharClass(chars, types, classes, ix) {			
+function _getCharClass(chars: string[], types: number[], classes: any[], ix: number) {
 	var cType = types[ix], wType, nType, len, i;
 	switch(cType){
 		case L:
 		case R:
 			lastArabic = false;
 		case ON:
-		case AN:
+		case AN_:
 			return cType;
 		case EN:
-			return lastArabic ? AN : EN;
+			return lastArabic ? AN_ : EN;
 		case AL:
 			lastArabic = true;
 			hasUBAT_AL = true;
@@ -180,14 +199,14 @@ function _getCharClass(chars, types, classes, ix) {
 			return ON;
 		case CS:
 			if (ix < 1 || (ix + 1) >= types.length ||
-				((wType = classes[ix - 1]) != EN && wType != AN) ||
-				((nType = types[ix + 1]) != EN && nType != AN)){
+				((wType = classes[ix - 1]) != EN && wType != AN_) ||
+				((nType = types[ix + 1]) != EN && nType != AN_)){
 				return ON;
 			}
-			if (lastArabic){nType = AN;}
+			if (lastArabic){nType = AN_;}
 			return nType == wType ? nType : ON;
 		case ES:
-			wType = ix > 0 ? classes[ix - 1] : B;
+			wType = ix > 0 ? classes[ix - 1] : B_;
 			if (wType == EN && (ix + 1) < types.length && types[ix + 1] == EN){
 				return EN;
 			}
@@ -215,7 +234,9 @@ function _getCharClass(chars, types, classes, ix) {
 				i++;
 			}
 			if (i < len){
-				var c = chars[ix], rtlCandidate = (c >= 0x0591 && c <= 0x08FF) || c == 0xFB1E;
+				// var c = chars[ix], rtlCandidate = (c >= 0x0591 && c <= 0x08FF) || c == 0xFB1E;
+				var c = chars[ix].charCodeAt(0),
+						rtlCandidate = (c >= 0x0591 && c <= 0x08FF) || c == 0xFB1E;
 				
 				wType = types[i];
 				if (rtlCandidate && (wType == R || wType == AL)){
@@ -223,11 +244,11 @@ function _getCharClass(chars, types, classes, ix) {
 				}
 			}
 
-			if (ix < 1 || (wType = types[ix - 1]) == B){
+			if (ix < 1 || (wType = types[ix - 1]) == B_){
 				return ON;
 			}
 			return classes[ix - 1];
-		case B:
+		case B_:
 			lastArabic = false;
 			hasUBAT_B = true;
 			return dir;
@@ -235,7 +256,7 @@ function _getCharClass(chars, types, classes, ix) {
 			hasUBAT_S = true;
 			return ON;
 		case LRE:
-		case RLE:
+		case RLE_:
 		case LRO:
 		case RLO:
 		case PDF:
@@ -245,7 +266,7 @@ function _getCharClass(chars, types, classes, ix) {
 	}
 }
 
-function _getCharacterType( ch ) {		
+function _getCharacterType( ch: string ) {
 	var uc = ch.charCodeAt(0), hi = uc >> 8;
 	
 	if (hi == 0) {		
@@ -256,7 +277,7 @@ function _getCharacterType( ch ) {
 		if (/[\u0610-\u061a\u064b-\u065f\u06d6-\u06e4\u06e7-\u06ed]/.test(ch))
 			return NSM;
 		else if (/[\u0660-\u0669\u066b-\u066c]/.test(ch))
-			return AN;
+			return AN_;
 		else if (uc == 0x066A)
 			return ET;
 		else if (/[\u06f0-\u06f9]/.test(ch))
@@ -271,28 +292,9 @@ function _getCharacterType( ch ) {
 	return ON;	
 }
 
-function _isArabicDiacritics( ch ) {
+function _isArabicDiacritics( ch: string ) {
 	return (ch >= '\u064b' && ch <= '\u0655');
 }
-
-/* Strong LTR character (0 - even), regular width */
-exports.L = L;
-/* Strong RTL character (1 - odd), Bidi width */
-exports.R = R;
-/* European digit (2 - even), regular width */
-exports.EN = EN;
-/* Neutral RTL-by-context character (3 - odd), regular width */
-exports.ON_R = 3;
-/* Hindi (Arabic) digit (4 - even), Bidi width */
-exports.AN = 4;
-/* Arabic LamAlef (5 - odd), Half Bidi width */
-exports.R_H = 5;
-/* invisible EOL (6 - even), zero width */
-exports.B = 6;
-/* invisible RLE (7 - odd), zero width */
-exports.RLE = 7;
-
-exports.DOT = "\xB7";
 
 /**
  * Performs text reordering by implementing Unicode Bidi algorithm
@@ -303,12 +305,12 @@ exports.DOT = "\xB7";
  *
  * @return {Object} An object containing logicalFromVisual map and Bidi levels
  **/
-exports.doBidiReorder = function(text, textCharTypes, isRtl) {
+export function doBidiReorder(text: string, textCharTypes: number[], isRtl: boolean) {
 	if (text.length < 2)
 		return {};
 		
 	var chars = text.split(""), logicalFromVisual = new Array(chars.length),
-		bidiLevels = new Array(chars.length), levels = []; 
+		bidiLevels = new Array(chars.length), levels: number[] = []; 
 
 	dir = isRtl ? RTL : LTR;
 
@@ -320,7 +322,7 @@ exports.doBidiReorder = function(text, textCharTypes, isRtl) {
 	_invertLevel(1, levels, logicalFromVisual);
 
 	for (var i = 0; i < logicalFromVisual.length - 1; i++) { //fix levels to reflect character width
-		if (textCharTypes[i] === AN) {
+		if (textCharTypes[i] === AN_) {
 			levels[i] = exports.AN;
 		} else if (levels[i] === R && ((textCharTypes[i] > AL && textCharTypes[i] < LRE) 
 			|| textCharTypes[i] === ON || textCharTypes[i] === BN)) {
@@ -351,11 +353,11 @@ exports.doBidiReorder = function(text, textCharTypes, isRtl) {
  *
  * @return {Boolean} 'true' if text contains Bidi characters, otherwise 'false' 
  **/
-exports.hasBidiCharacters = function(text, textCharTypes){
+export function hasBidiCharacters(text: string, textCharTypes: number[]): boolean {
 	var ret = false;
 	for (var i = 0; i < text.length; i++){
 		textCharTypes[i] = _getCharacterType(text.charAt(i));
-		if (!ret && (textCharTypes[i] == R || textCharTypes[i] == AL || textCharTypes[i] == AN))
+		if (!ret && (textCharTypes[i] == R || textCharTypes[i] == AL || textCharTypes[i] == AN_))
 			ret = true;
 	}
 	return ret;
@@ -369,7 +371,7 @@ exports.hasBidiCharacters = function(text, textCharTypes){
  *
  * @return {Number} visual index (on display) corresponding to logical index
  **/	
-exports.getVisualFromLogicalIdx = function(logIdx, rowMap) {
+export function getVisualFromLogicalIdx(logIdx: number, rowMap: { logicalFromVisual: number[] }): number {
 	for (var i = 0; i < rowMap.logicalFromVisual.length; i++) {
 		if (rowMap.logicalFromVisual[i] == logIdx)
 			return i;

@@ -39,7 +39,6 @@ const optionsProvider: OptionsProvider<any> = {
 		const self = this as any;
 		if (self["$" + name] === value)
 			return;
-		//@ts-ignore
 		var opt = self.$options[name];
 		if (!opt) {
 			return warn('misspelled option "' + name + '"');

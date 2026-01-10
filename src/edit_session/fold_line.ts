@@ -1,16 +1,14 @@
 "use strict";
-/**
- * @typedef {import("./fold").Fold} Fold
- */
+
 import {Point,Range} from "../range";
 import type { Fold } from "./fold";
 
 export class FoldLine {
-	foldData: FoldLine[];
-	folds: Fold[]
-	range: Range;
-	start: Point
-	end: Point
+	public foldData: FoldLine[];
+	public folds: Fold[]
+	public range: Range;
+	public start: Point
+	public end: Point
 	/**
 	 * If an array is passed in, the folds are expected to be sorted already.
 	 * @param {FoldLine[]} foldData
@@ -19,7 +17,6 @@ export class FoldLine {
 	constructor(foldData: FoldLine[], folds: Fold[] | Fold) {
 		this.foldData = foldData;
 		if (Array.isArray(folds)) {
-			/**@type {Fold[]} */
 			this.folds = folds;
 		} else {
 			folds = this.folds = [ folds ];
@@ -54,8 +51,8 @@ export class FoldLine {
 	 */
 	addFold(fold: Fold) {
 		if (fold.sameRow) {
-			// @ts-expect-error TODO: startRow, endRow are missing in Fold and FoldLine
-			if (fold.start.row < this.startRow || fold.endRow > this.endRow) {
+			//// @ts-expect-error TODO: startRow, endRow are missing in Fold and FoldLine
+			if (fold.start.row < this.start.row || fold.end.row > this.end.row) {
 				throw new Error("Can't add a fold to this FoldLine as it has no connection");
 			}
 			this.folds.push(fold);

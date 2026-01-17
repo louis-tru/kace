@@ -2,7 +2,7 @@ var Decorator = require("../../layer/decorators").Decorator;
 
 class ScrollDiffDecorator extends Decorator {
 	/**
-	 * @param {import("../../../ace-internal").Ace.VScrollbar} scrollbarV
+	 * @param {VScrollbar} scrollbarV
 	 * @param {import("../../virtual_renderer").VirtualRenderer} renderer
 	 * @param {boolean} [forInlineDiff]
 	 */

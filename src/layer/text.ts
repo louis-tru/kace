@@ -793,8 +793,8 @@ export class Text extends EventEmitter<TextEvents> {
 
 	/**
 	 * @param {number} row
-	 * @param {import("../../ace-internal").FoldLine} foldLine
-	 * @return {import("../../ace-internal").Token[]}
+	 * @param {FoldLine} foldLine
+	 * @return {Token[]}
 	 */
 	$getFoldLineTokens(row: number, foldLine: FoldLine): Token[] {
 		var session = this.session;

@@ -31,8 +31,8 @@ declare module "quark/event" {
 }
 
 View.prototype.getAttributes = function(this: View) {
-	// return this.data || (this.data = {});
-	return this as any as Dict;
+	return this.data || (this.data = {});
+	// return this as any as Dict;
 };
 
 View.prototype.setAttribute = function(this: View, key: string, val: any) {
@@ -45,6 +45,7 @@ View.prototype.getAttribute = function(this: View, key: string) {
 
 View.prototype.removeAttribute = function(this: View, key: string) {
 	if (this.data) delete this.data[key];
+	// delete (this as any)[key];
 };
 
 View.prototype.querySelectorAllForClass = function(this: View, selector: string) {

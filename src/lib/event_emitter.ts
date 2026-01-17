@@ -16,6 +16,9 @@ export interface InternalEvent {
 var stopPropagation = function(this: InternalEvent) { this.propagationStopped = true; };
 var preventDefault = function(this: InternalEvent) { this.defaultPrevented = true; };
 
+
+// type EventEmitter<T extends { [K in keyof T]: (...args: any[]) => any }> = import("./src/lib/event_emitter").EventEmitter<T>;
+
 export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 	protected _eventRegistry?: {
 		[K in keyof T]?: Array<T[K]>

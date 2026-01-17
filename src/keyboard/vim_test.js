@@ -3,7 +3,6 @@ if (typeof process !== "undefined") {
 		require("../test/mockdom");
 }
 
-
 var EditSession = require("./../edit_session").EditSession;
 var Editor = require("../editor").Editor;
 var UndoManager = require("./../undomanager").UndoManager;

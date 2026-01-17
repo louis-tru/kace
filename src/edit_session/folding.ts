@@ -12,8 +12,8 @@ import type { UIEvent, KeyEvent } from "quark/event";
 import type { Token } from "src/background_tokenizer";
 
 /**
- * @typedef {import("../edit_session").EditSession & import("../../ace-internal").Folding} IFolding
- * @typedef {import("../../ace-internal").Ace.Delta } Delta
+ * @typedef {import("../edit_session").EditSession & Folding} IFolding
+ * @typedef {Delta } Delta
  */
 
 export interface Folding {
@@ -617,7 +617,7 @@ export function Folding(this: EditSession) {
 
 	/**
 	 * 
-	 * @param {number|null|import("../../ace-internal").Ace.Point|Range|Range[]} [location]
+	 * @param {number|null|Point|Range|Range[]} [location]
 	 * @param {boolean} [expandInner]
 	 * @return {Fold[]| undefined}
 	 */
@@ -988,7 +988,7 @@ export function Folding(this: EditSession) {
 	};
 
 	/**
-	 * @param {import("../../ace-internal").FoldMode} foldMode
+	 * @param {FoldMode} foldMode
 	 */
 	this.$setFolding = function(foldMode) {
 		if (this.$foldMode == foldMode)

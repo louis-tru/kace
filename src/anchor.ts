@@ -19,7 +19,7 @@ export interface AnchorEvents {
 /**
  * Defines a floating pointer in the document. Whenever text is inserted or deleted before the cursor, the position of the anchor is updated.
  **/
-export class Anchor extends EventEmitter<AnchorEvents> {
+export class Anchor extends EventEmitter<AnchorEvents> implements Point {
 
 	/**@type{Document}*/
 	public document: Document;
@@ -151,7 +151,7 @@ export class Anchor extends EventEmitter<AnchorEvents> {
 	 * Clips the anchor position to the specified row and column.
 	 * @param {Number} row The row index to clip the anchor to
 	 * @param {Number} column The column index to clip the anchor to
-	 * @returns {import("../ace-internal").Point}
+	 * @returns {Point}
 	 *
 	 **/
 	private $clipPositionToDocument(row: number, column: number) {

@@ -19,7 +19,6 @@ import {EditSession, EditSessionEvents} from "../../edit_session";
 import {MinimalGutterDiffDecorator as MinimalGutterDiffDecorator} from "./gutter_decorator";
 
 import type {OptionsProvider} from "../../lib/app_config";
-import type { Ace } from "../../../ace-internal";
 
 import type {Text} from "quark";
 import type { IDiffProvider, DiffModel } from "../diff";
@@ -27,6 +26,7 @@ import type { Selection } from "../../selection";
 import type { Marker, MarkerLike } from "../../layer/marker";
 import type { LayerConfig } from "../../layer/lines";
 import type {Fold} from "../../edit_session/fold";
+import type { Theme } from "../../theme";
 
 const dummyDiffProvider: IDiffProvider = {
 	compute: function(val1: string[], val2: string[], options: any) {
@@ -62,7 +62,7 @@ export type DiffViewOptions = {
 	/**
 	 * - Theme to apply to both editors
 	 */
-	theme?: string | Ace.Theme;
+	theme?: string | Theme;
 };
 
 type EditorExt = Editor & {renderer: Renderer & {$scrollDecorator?: ScrollDiffDecorator}};
@@ -301,7 +301,7 @@ export class BaseDiffView {
 		return this.diffSession;
 	}
 
-	setTheme(theme: string | Ace.Theme) {
+	setTheme(theme: string | Theme) {
 		this.editorA && this.editorA.setTheme(theme);
 		this.editorB && this.editorB.setTheme(theme);
 	}
@@ -310,7 +310,7 @@ export class BaseDiffView {
 		return (this.editorA || this.editorB).getTheme();
 	}
 
-	onChangeTheme(e?: { theme?: string | Ace.Theme }) {
+	onChangeTheme(e?: { theme?: string | Theme }) {
 		var theme = e && e.theme || this.getTheme();
 
 		if (this.editorA && this.editorA.getTheme() !== theme) {
@@ -518,7 +518,7 @@ export class BaseDiffView {
 	}
 
 	/**
-	 * @param {import("../../../ace-internal").Ace.Point} pos
+	 * @param {Point} pos
 	 * @param {EditSession} session
 	 */
 	$screenRow(pos: Point, session: EditSession) {
@@ -942,7 +942,7 @@ config.defineOptions(BaseDiffView.prototype, "DiffView", {
 		value: 5000,
 	},
 	theme: {
-		set: function(value: string | Ace.Theme) {
+		set: function(value: string | Theme) {
 			this.setTheme(value);
 		},
 		get: function() {

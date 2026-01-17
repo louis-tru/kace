@@ -216,7 +216,7 @@ const editSessionTextMarkerMixin = {
 	/**
 	 * Adds a text marker to the current edit session.
 	 *
-	 * @param {import("../../ace-internal").Ace.IRange} range - The range to mark in the document
+	 * @param {IRange} range - The range to mark in the document
 	 * @param {string} className - The CSS class name to apply to the marked text
 	 * @returns {number} The unique identifier for the added text marker
 	 *

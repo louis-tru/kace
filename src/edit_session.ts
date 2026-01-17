@@ -5,14 +5,13 @@ import {BidiHandler} from "./bidihandler";
 import config from "./config";
 import {EventEmitter} from "./lib/event_emitter";
 import {Selection} from "./selection";
-import {TextMode} from "./mode";
-import {Range,Delta,Point, IRange} from "./range";
+import {SyntaxMode, TextMode} from "./mode";
+import {Range,Delta,Point,IRange} from "./range";
 import {LineWidget, LineWidgets} from "./line_widgets";
 import {Document, NewLineMode} from "./document";
 import {BackgroundTokenizer} from "./background_tokenizer";
 import {SearchHighlight} from "./search_highlight";
 import {UndoManager} from "./undomanager";
-import {Ace} from "../ace-internal";
 import type { FoldLine } from "./edit_session/fold_line";
 import util from "quark/util";
 import type { FontMetrics } from "./layer/font_metrics";
@@ -173,7 +172,7 @@ export interface EditSession extends EventEmitter<EditSessionEvents>,
 	getSelectionMarkers(): any[],
 }
 
-const $defaultUndoManager: Ace.UndoManager = {
+const $defaultUndoManager: UndoManager = {
 	undo: function() {},
 	redo: function() {},
 	hasUndo: function() { return false },
@@ -183,7 +182,7 @@ const $defaultUndoManager: Ace.UndoManager = {
 	addSelection: function() {},
 	startNewGroup: function() {},
 	addSession: function() {}
-} as any as Ace.UndoManager;
+} as any as UndoManager;
 
 /**
  * Stores all the data about [[Editor `Editor`]] state providing easy way to change editors state.
@@ -227,7 +226,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	private $informUndoManager?: ReturnType<typeof lang.delayedCall>;
 
 	private $annotations: Annotation[] = [];
-	public $mode: Ace.SyntaxMode;
+	public $mode: SyntaxMode;
 	public $modeId: string = "";
 	public $scrollLeft: number = 0;
 	public $scrollTop: number = 0;
@@ -244,7 +243,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {Document | String} [text] [If `text` is a `Document`, it associates the `EditSession` with it. Otherwise, a new `Document` is created, with the initial text]{: #textParam}
 	 * @param {SyntaxMode} [mode] [The initial language mode to use for the document]{: #modeParam}
 	 **/
-	constructor(text?: Document | string, mode?: Ace.SyntaxMode) {
+	constructor(text?: Document | string, mode?: SyntaxMode) {
 		super();
 		this.$foldData.toString = function() {
 			return this.join("\n");
@@ -329,7 +328,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Emits "beforeEndOperation" event just before clearing everything, where the current operation can be accessed through `curOp` property.
 	 * @param {any} [e]
 	 */
-	endOperation(e?: Ace.Command | boolean) {
+	endOperation(e?: Command | boolean) {
 		if (this.curOp) {
 			if (e && (e as {returnValue?: number}).returnValue === 0) {
 				this.curOp = void 0;
@@ -471,7 +470,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {Delta} delta
 	 * @internal
 	 */
-	onChange(delta: Ace.Delta) {
+	onChange(delta: Delta) {
 		this.$modified = true;
 		this.$bidiHandler.onChange(delta);
 		this.$resetRowCache(delta.start.row);
@@ -529,7 +528,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 		undoManager.$rev = session.history.rev;
 
 		const editSession = new EditSession(session.value);
-		session.folds.forEach(function(fold: {start: Ace.Point, end: Ace.Point}) {
+		session.folds.forEach(function(fold: {start: Point, end: Point}) {
 		  editSession.addFold("...", Range.fromPoints(fold.start, fold.end));
 		});
 		editSession.setAnnotations(session.annotations);
@@ -650,7 +649,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Sets the undo manager.
 	 * @param {UndoManager} undoManager The new undo manager
 	 **/
-	setUndoManager(undoManager?: Ace.UndoManager) {
+	setUndoManager(undoManager?: UndoManager) {
 		this.$undoManager = undoManager;
 
 		if (this.$informUndoManager)
@@ -738,7 +737,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * Returns `true` if the character at the position is a soft tab.
 	 * @param {Point} position The position to check
 	 **/
-	isTabStop(position: Ace.Point): boolean {
+	isTabStop(position: Point): boolean {
 		return !!this.$useSoftTabs && (position.column % this.$tabSize === 0);
 	}
 
@@ -1169,7 +1168,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {SyntaxMode | string} mode Set a new text mode
 	 * @param {() => void} [cb] optional callback
 	 **/
-	setMode(mode?: Ace.SyntaxMode | string, cb?: () => void) {
+	setMode(mode?: SyntaxMode | string, cb?: () => void) {
 		var options: any;
 		var path: string;
 		if (mode && typeof mode === "object") {
@@ -1220,7 +1219,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param mode
 	 * @param [$isPlaceholder]
 	 */
-	$onChangeMode(mode: Ace.SyntaxMode, $isPlaceholder?: boolean) {
+	$onChangeMode(mode: SyntaxMode, $isPlaceholder?: boolean) {
 		if (!$isPlaceholder)
 			this.$modeId = mode.$id;
 		if (this.$mode === mode)
@@ -1426,7 +1425,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 *
 	 * @returns {String}
 	 **/
-	getTextRange(range?: Ace.IRange) {
+	getTextRange(range?: IRange) {
 		return this.doc.getTextRange(range || this.selection.getRange());
 	}
 
@@ -1436,7 +1435,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {String} text A chunk of text to insert
 	 * @returns {Point} The position of the last line of `text`. If the length of `text` is 0, this function simply returns `position`.
 	 **/
-	insert(position: Ace.Point, text: string) {
+	insert(position: Point, text: string) {
 		return this.doc.insert(position, text);
 	}
 
@@ -1445,7 +1444,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {IRange} range A specified Range to remove
 	 * @returns {Point} The new `start` property of the range, which contains `startRow` and `startColumn`. If `range` is empty, this function returns the unmodified value of `range.start`.
 	 **/
-	remove(range: Ace.IRange) {
+	remove(range: IRange) {
 		return this.doc.remove(range);
 	}
 
@@ -1539,7 +1538,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 		}
 
 		var range: Range = new Range(0, 0, 0, 0);
-		var point: Ace.Point;
+		var point: Point;
 
 		for (var i = 0; i < deltas.length; i++) {
 			var delta = deltas[i];
@@ -1600,7 +1599,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 * @param {boolean} [copy]
 	 * @returns {Range} The new range where the text was moved to.
 	 **/
-	moveText(fromRange: Ace.Range, toPosition: Ace.Point, copy?: boolean) {
+	moveText(fromRange: Range, toPosition: Point, copy?: boolean) {
 		var text = this.getTextRange(fromRange);
 		var folds = this.getFoldsInRange(fromRange);
 
@@ -2475,7 +2474,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 *
 	 * @related EditSession.documentToScreenPosition
 	 **/
-	screenToDocumentPosition(screenRow: number, screenColumn: number, offsetX?: number): Ace.Point {
+	screenToDocumentPosition(screenRow: number, screenColumn: number, offsetX?: number): Point {
 		if (screenRow < 0)
 			return {row: 0, column: 0};
 
@@ -2571,7 +2570,7 @@ export class EditSession extends EventEmitter<EditSessionEvents> {
 	 *
 	 * @related EditSession.screenToDocumentPosition
 	 **/
-	documentToScreenPosition(docRow: number|Ace.Point, docColumn?: number) {
+	documentToScreenPosition(docRow: number|Point, docColumn?: number) {
 		// Normalize the passed in arguments.
 		if (typeof docRow === "object")
 			var pos = this.$clipPositionToDocument(/**@type{Point}*/(docRow).row, /**@type{Point}*/(docRow).column);

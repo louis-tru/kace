@@ -15,8 +15,12 @@
 import { Editor } from "../editor";
 import config from "../config";
 
-export interface ElasticTabstopsOptionsEditorExtension {
+export interface ElasticTabstopsOptions {
 	useElasticTabstops?: boolean;
+}
+
+export interface ElasticTabstopsEditorExtension {
+	elasticTabstops?: ElasticTabstopsLite;
 }
 
 export class ElasticTabstopsLite {
@@ -333,7 +337,7 @@ config.defineOptions(Editor.prototype, "editor", {
 		 * @param {boolean} val
 		 * @this {Editor}
 		 */
-		set: function(val: boolean) {
+		set: function(this: Editor, val: boolean) {
 			if (val) {
 				if (!this.elasticTabstops)
 					this.elasticTabstops = new ElasticTabstopsLite(this);

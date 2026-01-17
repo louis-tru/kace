@@ -4,6 +4,7 @@ var Range = require("../range").Range;
 
 var MatchingBraceOutdent = function() {};
 
+
 (function() {
 
     this.checkOutdent = function(line, input) {

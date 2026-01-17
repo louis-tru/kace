@@ -6,7 +6,7 @@ import type {Text} from 'quark';
 import type { Lines } from '../layer/lines';
 import type { KeyEvent } from 'quark/event';
 import type { Gutter } from '../layer/gutter';
-import { Ace } from '../../ace-internal';
+import type { GutterTooltip } from '../mouse/default_gutter_handler';
 
 /*
  * Custom Ace gutter keyboard handler
@@ -18,7 +18,7 @@ export class GutterKeyboardHandler {
 	private lines: Lines;
 	public activeRowIndex: number | null;
 	public activeLane: "fold" | "annotation" | null;
-	private annotationTooltip: Ace.GutterTooltip;
+	private annotationTooltip: GutterTooltip;
 
 	constructor(editor: Editor) {
 		this.editor = editor;

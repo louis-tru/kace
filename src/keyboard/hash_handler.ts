@@ -51,6 +51,7 @@ export class MultiHashHandler {
 	public commands: Dict<Command>;
 	public commandKeyBinding: Dict<BindingCmd>;
 	public $singleCommand: boolean;
+	public byName: Dict<Command>;
 
 	/**
 	 * @param {CommandLikes} [config]
@@ -58,6 +59,7 @@ export class MultiHashHandler {
 	 */
 	constructor(config?: CommandLikes, platform?: Platform) {
 		this.$init(config, platform, false);
+		this.byName = this.commands;
 	}
 
 	/**

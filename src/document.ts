@@ -1,16 +1,15 @@
 "use strict";
 
 /**
- * @typedef {import("../ace-internal").Ace.Delta} Delta
- * @typedef {import("../ace-internal").Ace.Point} Point
- * @typedef {import("../ace-internal").Ace.IRange} IRange
- * @typedef {import("../ace-internal").Ace.NewLineMode} NewLineMode
+ * @typedef {Delta} Delta
+ * @typedef {Point} Point
+ * @typedef {IRange} IRange
+ * @typedef {NewLineMode} NewLineMode
  */
 import {applyDelta} from "./apply_delta";
 import {EventEmitter} from "./lib/event_emitter";
-import {Range,Delta, IRange} from "./range";
+import {Point, Range, IRange, Delta} from "./range";
 import {Anchor} from "./anchor";
-import {Ace} from "../ace-internal";
 
 export type NewLineMode = 'auto' | 'unix' | 'windows';
 
@@ -184,7 +183,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * 
 	 * @returns {String}
 	 **/
-	getTextRange(range: Ace.IRange) {
+	getTextRange(range: IRange) {
 		return this.getLinesForRange(range).join(this.getNewLineCharacter());
 	}
 	
@@ -194,7 +193,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * 
 	 * @returns {string[]}
 	 **/
-	getLinesForRange(range: Ace.IRange) {
+	getLinesForRange(range: IRange) {
 		var lines;
 		if (range.start.row === range.end.row) {
 			// Handle a single-line range.
@@ -240,7 +239,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 
 	 * @deprecated
 	 */
-	insertNewLine(position: Ace.Point) {
+	insertNewLine(position: Point) {
 		console.warn("Use of document.insertNewLine is deprecated. Use insertMergedLines(position, ['', '']) instead.");
 		return this.insertMergedLines(position, ["", ""]);
 	}
@@ -252,7 +251,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @returns {Point} The position ({row, column}) of the last line of `text`. If the length of `text` is 0, this function simply returns `position`. 
 	 
 	 **/
-	insert(position: Ace.Point, text: string) {
+	insert(position: Point, text: string) {
 		// Only detect new lines if the document has no line break yet.
 		if (this.getLength() <= 1)
 			this.$detectNewLine(text);
@@ -271,7 +270,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @param {String} text A chunk of text without new lines
 	 * @returns {Point} Returns the position of the end of the inserted text
 	 **/
-	insertInLine(position: Ace.Point, text: string) {
+	insertInLine(position: Point, text: string) {
 		var start = this.clippedPos(position.row, position.column);
 		var end = this.pos(position.row, position.column + text.length);
 		
@@ -312,7 +311,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @param {Point} pos
 	 * @return {Point}
 	 */
-	clonePos(pos: Ace.Point) {
+	clonePos(pos: Point) {
 		return {row: pos.row, column: pos.column};
 	}
 
@@ -330,7 +329,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @return {Point}
 	 * @private
 	 */
-	$clipPosition(position: Ace.Point) {
+	$clipPosition(position: Point) {
 		var length = this.getLength();
 		if (position.row >= length) {
 			position.row = Math.max(0, length - 1);
@@ -383,7 +382,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 *   {row: row, column: 0}
 	 *   ```
 	 **/    
-	insertMergedLines(position: Ace.Point, lines: string[]) {
+	insertMergedLines(position: Point, lines: string[]) {
 		var start = this.clippedPos(position.row, position.column);
 		var end = {
 			row: start.row + lines.length - 1,
@@ -406,7 +405,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @returns {Point} Returns the new `start` property of the range, which contains `startRow` and `startColumn`. If `range` is empty, this function returns the unmodified value of `range.start`.
 	 
 	 **/
-	remove(range: Ace.IRange) {
+	remove(range: IRange) {
 		var start = this.clippedPos(range.start.row, range.start.column);
 		var end = this.clippedPos(range.end.row, range.end.column);
 		this.applyDelta({
@@ -530,7 +529,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * Applies all changes in `deltas` to the document.
 	 * @param {Delta[]} deltas An array of delta objects (can include "insert" and "remove" actions)
 	 **/
-	applyDeltas(deltas: Ace.Delta[]) {
+	applyDeltas(deltas: Delta[]) {
 		for (var i=0; i<deltas.length; i++) {
 			this.applyDelta(deltas[i]);
 		}
@@ -540,7 +539,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * Reverts all changes in `deltas` from the document.
 	 * @param {Delta[]} deltas An array of delta objects (can include "insert" and "remove" actions)
 	 **/
-	revertDeltas(deltas: Ace.Delta[]) {
+	revertDeltas(deltas: Delta[]) {
 		for (var i=deltas.length-1; i>=0; i--) {
 			this.revertDelta(deltas[i]);
 		}
@@ -551,7 +550,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @param {Delta} delta A delta object (can include "insert" and "remove" actions)
 	 * @param {boolean} [doNotValidate]
 	 **/
-	applyDelta(delta: Ace.Delta, doNotValidate?: boolean) {
+	applyDelta(delta: Delta, doNotValidate?: boolean) {
 		var isInsert = delta.action == "insert";
 		// An empty range is a NOOP.
 		if (isInsert ? delta.lines.length <= 1 && !delta.lines[0]
@@ -571,7 +570,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	/**
 	 * @param {Delta} delta
 	 */
-	$safeApplyDelta(delta: Ace.Delta) {
+	$safeApplyDelta(delta: Delta) {
 		var docLength = this.$lines.length;
 		// verify that delta is in the document to prevent applyDelta from corrupting lines array 
 		if (
@@ -587,7 +586,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @param {Delta} delta
 	 * @param {number} MAX
 	 */
-	$splitAndapplyLargeDelta(delta: Ace.Delta, MAX: number) {
+	$splitAndapplyLargeDelta(delta: Delta, MAX: number) {
 		// Split large insert deltas. This is necessary because:
 		//    1. We need to support splicing delta lines into the document via $lines.splice.apply(...)
 		//    2. fn.apply() doesn't work for a large number of params. The smallest threshold is on chrome 40 ~42000.
@@ -623,7 +622,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * Reverts `delta` from the document.
 	 * @param {Delta} delta A delta object (can include "insert" and "remove" actions)
 	 **/
-	revertDelta(delta: Ace.Delta) {
+	revertDelta(delta: Delta) {
 		this.$safeApplyDelta({
 			start: this.clonePos(delta.start),
 			end: this.clonePos(delta.end),
@@ -675,7 +674,7 @@ export class Document extends EventEmitter<DocumentEvents> {
 	 * @param {Number} [startRow=0] The row from which to start the conversion
 	 * @returns {Number} The index position in the document
 	 */
-	positionToIndex(pos: Ace.Point, startRow?: number) {
+	positionToIndex(pos: Point, startRow?: number) {
 		var lines = this.$lines || this.getAllLines();
 		var newlineLength = this.getNewLineCharacter().length;
 		var index = 0;

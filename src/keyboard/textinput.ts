@@ -2,7 +2,7 @@
 
 import util from "quark/util";
 import * as useragent from "../lib/env";
-import config from "../config";
+import {nls} from "../config";
 import * as lang from "../lib/lang";
 import * as clipboard from "../clipboard";
 import {View,Textarea} from "quark";
@@ -15,7 +15,6 @@ const BROKEN_SETDATA = false;//useragent.isChrome < 18;
 const USE_IE_MIME_TYPE = false;// useragent.isIE;
 const HAS_FOCUS_ARGS = false;//useragent.isChrome > 63;
 const MAX_LINE_LENGTH = 400;
-const nls = config.nls;
 
 import KEYS from "../lib/keys";
 const MODS = KEYS.KEY_MODS;
@@ -874,7 +873,7 @@ export class TextInput {
 		this.host._emit("nativecontextmenu", {
 			target: this.host,
 			domEvent: e
-		});
+		}, this.host);
 		this.moveToMouse(e, true);
 	}
 

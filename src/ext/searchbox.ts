@@ -29,14 +29,12 @@
 import * as dom from "../lib/dom";
 import * as lang from "../lib/lang";
 import * as event from "../lib/event";
-import {HashHandler} from "../keyboard/hash_handler";
+import {HashHandler,Command} from "../keyboard/hash_handler";
 import * as keyUtil from "../lib/keys";
 import config from "../config";
 import {Editor} from "../editor";
-import "./searchbox-css";
 import { Range } from "../range";
 import {Input,Label,Text} from "quark";
-import type {Command} from "../keyboard/hash_handler";
 
 const nls = config.nls;
 
@@ -71,26 +69,26 @@ export class SearchBox {
 	 * @param {never} [showReplaceForm]
 	 */
 	constructor(editor: Editor, range?: Range, showReplaceForm?: boolean) {
-		this.element = dom.buildDom(["Text", {class:"ace_search right"},
-			["Label", {action: "hide", class: "ace_searchbtn_close"}],
-			["Text", {class: "ace_search_form"},
-				["Input", {class: "ace_search_field", placeholder: nls("search-box.find.placeholder", "Search for"), spellcheck: "false"}],
-				["Label", {action: "findPrev", class: "ace_searchbtn prev",value: "\u200b"}],
-				["Label", {action: "findNext", class: "ace_searchbtn next",value: "\u200b"}],
-				["Label", {action: "findAll", class: "ace_searchbtn", title: "Alt-Enter", value: nls("search-box.find-all.text", "All")}]
+		this.element = dom.buildDom(["text", {class:"ace_search right"},
+			["label", {action: "hide", class: "ace_searchbtn_close"}],
+			["text", {class: "ace_search_form"},
+				["input", {class: "ace_search_field", placeholder: nls("search-box.find.placeholder", "Search for"), spellcheck: "false"}],
+				["label", {action: "findPrev", class: "ace_searchbtn prev",value: "\u200b"}],
+				["label", {action: "findNext", class: "ace_searchbtn next",value: "\u200b"}],
+				["label", {action: "findAll", class: "ace_searchbtn", title: "Alt-Enter", value: nls("search-box.find-all.text", "All")}]
 			],
-			["Text", {class: "ace_replace_form"},
-				["Input", {class: "ace_search_field", placeholder: nls("search-box.replace.placeholder", "Replace with"), spellcheck: "false"}],
-				["Label", {action: "replaceAndFindNext", class: "ace_searchbtn",value: nls("search-box.replace-next.text", "Replace")}],
-				["Label", {action: "replaceAll", class: "ace_searchbtn", value: nls("search-box.replace-all.text", "All")}]
+			["text", {class: "ace_replace_form"},
+				["input", {class: "ace_search_field", placeholder: nls("search-box.replace.placeholder", "Replace with"), spellcheck: "false"}],
+				["label", {action: "replaceAndFindNext", class: "ace_searchbtn",value: nls("search-box.replace-next.text", "Replace")}],
+				["label", {action: "replaceAll", class: "ace_searchbtn", value: nls("search-box.replace-all.text", "All")}]
 			],
-			["Text", {class: "ace_search_options"},
-				["Label", {action: "toggleReplace", class: "ace_button", title: nls("search-box.toggle-replace.title", "Toggle Replace mode"), style: {marginTop:-2, padding:[0, 5]}, value: "+"}],
-				["Label", {class: "ace_search_counter"}],
-				["Label", {action: "toggleRegexpMode", class: "ace_button", title: nls("search-box.toggle-regexp.title", "RegExp Search"), value: ".*"}],
-				["Label", {action: "toggleCaseSensitive", class: "ace_button", title: nls("search-box.toggle-case.title", "CaseSensitive Search"), value: "Aa"}],
-				["Label", {action: "toggleWholeWords", class: "ace_button", title: nls("search-box.toggle-whole-word.title", "Whole Word Search"), value: "\\b"}],
-				["Label", {action: "searchInSelection", class: "ace_button", title: nls("search-box.toggle-in-selection.title", "Search In Selection"), value: "S"}]
+			["text", {class: "ace_search_options"},
+				["label", {action: "toggleReplace", class: "ace_button", title: nls("search-box.toggle-replace.title", "Toggle Replace mode"), style: {marginTop:-2, padding:[0, 5]}, value: "+"}],
+				["label", {class: "ace_search_counter"}],
+				["label", {action: "toggleRegexpMode", class: "ace_button", title: nls("search-box.toggle-regexp.title", "RegExp Search"), value: ".*"}],
+				["label", {action: "toggleCaseSensitive", class: "ace_button", title: nls("search-box.toggle-case.title", "CaseSensitive Search"), value: "Aa"}],
+				["label", {action: "toggleWholeWords", class: "ace_button", title: nls("search-box.toggle-whole-word.title", "Whole Word Search"), value: "\\b"}],
+				["label", {action: "searchInSelection", class: "ace_button", title: nls("search-box.toggle-in-selection.title", "Search In Selection"), value: "S"}]
 			]
 		]);
 
@@ -100,6 +98,7 @@ export class SearchBox {
 		this.$init();
 		this.setEditor(editor);
 		// dom.importCssString(searchboxCss, "ace_searchbox", editor.container); // moved to searchbox-css.ts
+		import("./searchbox-css"); // load searchbox css
 		event.addListener(this.element, "TouchStart", function(e) { e.cancelBubble(); }, editor);
 	}
 

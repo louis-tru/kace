@@ -2,7 +2,9 @@
 import {Range} from "../range";
 import type {Editor} from "../editor";
 import type {Document} from "../document";
+import type {EditSession} from "../edit_session";
 import type {Point} from "../range";
+import type { CompleterCallback } from "../autocomplete";
 
 var splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
@@ -42,11 +44,11 @@ function wordDistance(doc: Document, pos: Point) {
 
 export function getCompletions(
 		editor: Editor,
-		session: Document,
+		session: EditSession,
 		pos: Point, prefix: string, 
-		callback: (err: any, completions: any[]) => void)
+		callback: CompleterCallback): void
 {
-	var wordScore = wordDistance(session, pos);
+	var wordScore = wordDistance(session.doc, pos);
 	var wordList = Object.keys(wordScore);
 	callback(null, wordList.map(function (word) {
 		return {

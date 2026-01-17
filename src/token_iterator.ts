@@ -119,7 +119,7 @@ export class TokenIterator {
 
 	/**
 	 * Return the current token position.
-	 * @returns {import("../ace-internal").Ace.Point}
+	 * @returns {Point}
 	 */
 	getCurrentTokenPosition() {
 		return {row: this.$row, column: this.getCurrentTokenColumn()};

@@ -13,14 +13,16 @@ import {FontMetrics} from "./layer/font_metrics";
 import {EventEmitter} from "./lib/event_emitter";
 import type {LayerConfig} from "./layer/lines";
 import type {Range} from "./range";
-import {Ace} from "../ace-internal";
 import qk, {Window, Morph, Box, Textarea, Text, Label, StyleSheets} from "quark";
 import {isTextToken} from "./layer/text_util";
 import type { OptionsProvider } from "./lib/app_config";
 import { Vec2, CursorStyle } from "quark/types";
 import type { LineWidget } from './line_widgets';
-import './css/editor-css';
 import type {Annotation} from "./layer/gutter";
+import type { Theme } from './theme';
+import type { EditSession } from './ace';
+import type { Point } from 'ace-code/src/edit_session/fold';
+import './css/editor-css';
 
 export type Composition = {
 	markerRange: Range; cssStyle?: StyleSheets; useTextareaForIME?: boolean; markerId?: number;
@@ -29,8 +31,8 @@ export type Composition = {
 export interface VirtualRendererEvents {
 	"afterRender": (e: any, emitter: VirtualRenderer) => void;
 	"beforeRender": (e: any, emitter: VirtualRenderer) => void;
-	"themeLoaded": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
-	"themeChange": (e: { theme: string | Ace.Theme }, emitter: VirtualRenderer) => void;
+	"themeLoaded": (e: { theme: string | Theme }, emitter: VirtualRenderer) => void;
+	"themeChange": (e: { theme: string | Theme }, emitter: VirtualRenderer) => void;
 	"scrollbarVisibilityChanged": (e: undefined, emitter: VirtualRenderer) => void;
 	"changeCharacterSize": (e: any, emitter: VirtualRenderer) => void;
 	"resize": (e: any, emitter: VirtualRenderer) => void;
@@ -92,7 +94,7 @@ export interface VirtualRenderer extends
 	theme?: any,
 	$theme?: any,
 	destroyed?: boolean,
-	session: Ace.EditSession,
+	session: EditSession,
 	keyboardFocusClassName?: string,
 }
 
@@ -174,7 +176,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {Text | null} [container] The root element of the editor
 	 * @param {String} [theme] The starting theme
 	 **/
-	constructor(container?: Text | null, theme?: string | Ace.Theme) {
+	constructor(container?: Text | null, theme?: string | Theme) {
 		super();
 		var _self = this;
 		if (container) {
@@ -288,7 +290,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * Associates the renderer with an [[EditSession `EditSession`]].
 	 * @param {EditSession} session The session to associate with
 	 **/
-	setSession(session: Ace.EditSession) {
+	setSession(session: EditSession) {
 		if (this.session)
 			this.session.doc.off("changeNewLineMode", this.onChangeNewLineMode);
 
@@ -1417,7 +1419,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {Point} lead
 	 * @param {number} [offset]
 	 */
-	scrollSelectionIntoView(anchor: Ace.Point, lead: Ace.Point, offset?: number) {
+	scrollSelectionIntoView(anchor: Point, lead: Point, offset?: number) {
 		// first scroll anchor into view then scroll lead into view
 		this.scrollCursorIntoView(anchor, offset);
 		this.scrollCursorIntoView(lead, offset);
@@ -1432,7 +1434,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {number} [offset]
 	 * @param {{ top?: any; bottom?: any; }} [$viewMargin]
 	 */
-	scrollCursorIntoView(cursor?: Ace.Point, offset?: number, $viewMargin?: { top?: any; bottom?: any; }) {
+	scrollCursorIntoView(cursor?: Point, offset?: number, $viewMargin?: { top?: any; bottom?: any; }) {
 		// the editor is not visible
 		if (this.$size.scrollerHeight === 0)
 			return;
@@ -1532,7 +1534,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {number} [alignment]
 	 * @returns {number}
 	 */
-	alignCursor(cursor?: Ace.Point | number, alignment?: number) {
+	alignCursor(cursor?: Point | number, alignment?: number) {
 		if (typeof cursor == "number")
 			cursor = {row: cursor, column: 0};
 
@@ -1876,7 +1878,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {string} text
 	 * @param {Point} [position]
 	 */
-	setGhostText(text: string, position?: Ace.Point) {
+	setGhostText(text: string, position?: Point) {
 		var cursor = this.session.selection.cursor;
 		var insertPosition = position || { row: cursor.row, column: cursor.column };
 
@@ -1979,7 +1981,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {Point} position
 	 * @return {{text: string, wrapped: boolean}[]}
 	 */
-	$calculateWrappedTextChunks(text: string, position: Ace.Point): {text: string, wrapped: boolean}[] {
+	$calculateWrappedTextChunks(text: string, position: Point): {text: string, wrapped: boolean}[] {
 		var availableWidth = this.$size.scrollerWidth - this.$padding * 2;
 		var limit = Math.floor(availableWidth / this.characterWidth) - 2;
 		limit = limit <= 0 ? 60 : limit; // this is a hack to prevent the editor from crashing when the window is too small
@@ -2084,8 +2086,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		this.updateLines(row, row);
 	}
 
-	private $themeId: string | Ace.Theme;
-	private $options: any;
+	private $themeId: string | Theme;
 
 	/**
 	 * [Sets a new theme for the editor. `theme` should exist, and be a directory path, like `ace/theme/textmate`.]{: #VirtualRenderer.setTheme}
@@ -2093,7 +2094,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 * @param {() => void} [cb] optional callback
 
 	 **/
-	setTheme(theme: string | Ace.Theme, cb?: () => void) {
+	setTheme(theme: string | Theme, cb?: () => void) {
 		var _self = this;
 		/**@type {any}*/
 		this.$themeId = theme;
@@ -2110,7 +2111,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		/**
 		 * @param {Theme} module
 		 */
-		function afterLoad(module: Ace.Theme) {
+		function afterLoad(module: Theme) {
 			if (_self.$themeId != theme)
 				return cb && cb();
 			if (!module || !module.cssClass)

@@ -1,10 +1,5 @@
 "use strict";
-/**
- * @typedef {import("./editor").Editor} Editor
- * @typedef {import("../ace-internal").Ace.CompletionProviderOptions} CompletionProviderOptions
- * @typedef {import("../ace-internal").Ace.CompletionOptions} CompletionOptions
- * @typedef {import("../ace-internal").Ace.Position} Position
- */
+
 var HashHandler = require("./keyboard/hash_handler").HashHandler;
 import {AcePopup} from "./autocomplete/popup";
 import {AceInline} from "./autocomplete/inline";
@@ -14,13 +9,11 @@ import * as lang from "./lib/lang";
 import {snippetManager} from "./snippets";
 import config from "./config";
 import {preventParentScroll} from "./lib/scroll";
-import {Ace} from "../ace-internal";
 import type {Anchor} from "./anchor";
 import {Window,View,Text} from 'quark';
 import {UIEvent} from 'quark/event';
-import {MouseEvent} from './mouse/mouse_event';
 import type {EditSession} from "./edit_session";
-import type {Point} from "./range";
+import type {Point, IRange} from "./range";
 import type { Editor } from "./editor";
 
 /**
@@ -35,11 +28,11 @@ import type { Editor } from "./editor";
  * it would be used instead of `docText`.
  * @property {string} [completerId] - the identifier of the completer
  * @property {boolean} [skipFilter] - a boolean value to decide if the popup item is going to skip the filtering process done using prefix text.
- * @property {import("../ace-internal").Ace.IRange} [range] - An object specifying the range of text to be replaced with the new completion value (experimental)
+ * @property {IRange} [range] - An object specifying the range of text to be replaced with the new completion value (experimental)
  * @property {any} [command] - A command to be executed after the completion is inserted (experimental)
  * @property {string} [snippet] - a text snippet that would be inserted when the completion is selected
  * @property {string} [value] - The text that would be inserted when selecting this completion.
- * @property {import("../ace-internal").Ace.Completer} [completer]
+ * @property {Completer} [completer]
  * @property {boolean} [hideInlinePreview]
  * @export
  */
@@ -90,10 +83,14 @@ export interface BaseCompletion {
 	docText?: string;
 	completerId?: string;
 	skipFilter?: boolean;
-	range?: Ace.IRange;
+	range?: IRange;
 	command?: any;
 	completer?: Completer;
 	hideInlinePreview?: boolean;
+	value?: string;
+	snippet?: string;
+	error?: number;
+	message?: string;
 }
 
 /**
@@ -104,16 +101,9 @@ export interface BaseCompletion {
  */
 
 export interface SnippetCompletion extends BaseCompletion {
-	snippet: string;
 	value?: string;
+	snippet: string;
 }
-
-/**
- * @typedef {BaseCompletion & {value: string}} ValueCompletion
- * @property {string} value
- * @property {string} [snippet]
- * @export
- */
 
 export interface ValueCompletion extends BaseCompletion {
 	value: string;
@@ -126,7 +116,6 @@ export interface ValueCompletion extends BaseCompletion {
  * @type {SnippetCompletion|ValueCompletion}
  * @export
  */
-
 export type Completion = SnippetCompletion | ValueCompletion;
 
 
@@ -257,7 +246,7 @@ export class Autocomplete {
 		return this.popup;
 	}
 
-	inlineRenderer: Ace.AceInline;
+	inlineRenderer: AceInline;
 
 	private $initInline() {
 		if (!this.inlineEnabled || this.inlineRenderer)
@@ -288,7 +277,7 @@ export class Autocomplete {
 			this.hasSeen.add(completion);
 		}
 	}
-	private $onPopupChange(hide?: boolean) {
+	private $onPopupChange(hide?: boolean| void) {
 		if (this.inlineRenderer && this.inlineEnabled) {
 			var completion = hide ? void 0 : this.popup.getData(this.popup.getRow());
 			this.$updateGhostText(completion);
@@ -620,7 +609,7 @@ export class Autocomplete {
 	 * @param {{pos: Position, prefix: string}} [initialPosition]
 	 * @return {CompletionProvider}
 	 */
-	getCompletionProvider(initialPosition?: {pos: Ace.Position, prefix: string}): CompletionProvider {
+	getCompletionProvider(initialPosition?: {pos: Point, prefix: string}): CompletionProvider {
 		if (!this.completionProvider)
 			this.completionProvider = new CompletionProvider(initialPosition);
 		return this.completionProvider;
@@ -981,14 +970,14 @@ export class Autocomplete {
  */
 export class CompletionProvider {
 
-	initialPosition: {pos: Ace.Position, prefix: string};
+	initialPosition: {pos: Point, prefix: string};
 	active: boolean = false
 	completions: FilteredList | null = null;
 
 	/**
 	 * @param {{pos: Position, prefix: string}} [initialPosition]
 	 */
-	constructor(initialPosition?: {pos: Ace.Position, prefix: string}) {
+	constructor(initialPosition?: {pos: Point, prefix: string}) {
 		this.initialPosition = initialPosition || {pos: {row: 0, column: 0}, prefix: ""};
 	}
 
@@ -1073,11 +1062,11 @@ export class CompletionProvider {
 		editor.execCommand("insertstring", text);
 	}
 
-	completers: Ace.Completer[] | null = null;
+	completers: Completer[] | null = null;
 
 	/**
 	 * @param {Editor} editor
-	 * @param {import("../ace-internal").Ace.CompletionCallbackFunction} callback
+	 * @param {CompletionCallbackFunction} callback
 	 */
 	gatherCompletions(editor: Editor, callback: CompletionCallbackFunction) {
 		var session = editor.getSession();
@@ -1222,7 +1211,7 @@ export class FilteredList {
 	}
 
 	filterCompletions(items: Completion[], needle: string) {
-		var results = [];
+		var results: Completion[] = [];
 		var upper = needle.toUpperCase();
 		var lower = needle.toLowerCase();
 		loop: for (var i = 0, item; item = items[i]; i++) {

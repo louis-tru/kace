@@ -277,7 +277,7 @@ Mode = function() {
 			  var functionName = delegations[i];
 			  var defaultHandler = scope[functionName];
 			  scope[delegations[i]] =
-				  /** @this {import("../../ace-internal").Ace.SyntaxMode} */
+				  /** @this {SyntaxMode} */
 				  function () {
 					  return this.$delegator(functionName, arguments, defaultHandler);
 				  };

@@ -1,11 +1,15 @@
 "use strict";
+
 /**
  * @typedef {import("./document").Document} Document
  * @typedef {import("./edit_session").EditSession} EditSession
  * @typedef {import("./tokenizer").Tokenizer} Tokenizer
  */
 import {EventEmitter} from "./lib/event_emitter";
-import {Ace} from "../ace-internal";
+import type { Delta } from "./range";
+import type { Tokenizer } from "./tokenizer_dev";
+import type { Document } from "./document";
+import type { EditSession } from "./edit_session";
 
 export interface Token {
 	type: string;
@@ -37,15 +41,15 @@ export class BackgroundTokenizer extends EventEmitter<BackgroundTokenizerEvents>
 	/**@type {string[]|string[][]}*/
 	states: ((string|string[]|null)[]) = [];
 	currentLine: number = 0;
-	tokenizer: Ace.Tokenizer;
-	doc: Ace.Document;
+	tokenizer: Tokenizer;
+	doc: Document;
 
 	/**
 	 * Creates a new `BackgroundTokenizer` object.
 	 * @param {Tokenizer} tokenizer The tokenizer to use
 	 * @param {EditSession} [session] The editor session to associate with
 	 **/
-	constructor(tokenizer: Ace.Tokenizer, session?: Ace.EditSession) {
+	constructor(tokenizer: Tokenizer, session?: EditSession) {
 		super();
 		this.tokenizer = tokenizer;
 	}
@@ -94,7 +98,7 @@ export class BackgroundTokenizer extends EventEmitter<BackgroundTokenizerEvents>
 	 * Sets a new tokenizer for this object.
 	 * @param {Tokenizer} tokenizer The new tokenizer to use
 	 **/
-	setTokenizer(tokenizer: Ace.Tokenizer) {
+	setTokenizer(tokenizer: Tokenizer) {
 		this.tokenizer = tokenizer;
 		this.lines = [];
 		this.states = [];
@@ -106,7 +110,7 @@ export class BackgroundTokenizer extends EventEmitter<BackgroundTokenizerEvents>
 	 * Sets a new document to associate with this object.
 	 * @param {Document} doc The new document to associate with
 	 **/
-	setDocument(doc: Ace.Document) {
+	setDocument(doc: Document) {
 		this.doc = doc;
 		this.lines = [];
 		this.states = [];
@@ -153,9 +157,9 @@ export class BackgroundTokenizer extends EventEmitter<BackgroundTokenizerEvents>
 	}
 
 	/**
-	 * @param {import("../ace-internal").Ace.Delta} delta
+	 * @param {Delta} delta
 	 */
-	$updateOnChange(delta: Ace.Delta) {
+	$updateOnChange(delta: Delta) {
 		var startRow = delta.start.row;
 		var len = delta.end.row - startRow;
 

@@ -5,6 +5,8 @@ import {reportError} from "./report_error";
 import defaultEnglishMessages from "./default_english_messages";
 
 export interface OptionsProvider<T> {
+	readonly $options: {[key in keyof T]: any};
+
 	setOptions(optList: Partial<T>): void;
 
 	getOptions(optionNames?: Array<keyof T> | Partial<T>): Partial<T>;
@@ -14,7 +16,7 @@ export interface OptionsProvider<T> {
 	getOption<K extends keyof T>(name: K): T[K];
 }
 
-const optionsProvider: OptionsProvider<any> = {
+const optionsProvider = {
 	setOptions(optList: {[key: string]: any}) {
 		Object.keys(optList).forEach((key)=>{
 			this.setOption(key, optList[key]);

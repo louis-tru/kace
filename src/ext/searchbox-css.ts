@@ -1,7 +1,7 @@
 
-import {createCss} from "quark";
+import * as dom from "../lib/dom";
 
-createCss({
+dom.importCss({
 
 	/* -------------------------------------------------------------
 	* Editor Search Form
@@ -206,4 +206,4 @@ createCss({
 		paddingRight: 8,
 	},
 
-});
+}, "ace_searchbox", false);

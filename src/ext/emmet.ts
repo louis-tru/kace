@@ -469,7 +469,7 @@ export function load(cb?: () => void): boolean {
 	return true;
 };
 
-export interface EmmetOptionsEditorExtension {
+export interface EmmetOptions {
 	enableEmmet?: boolean;
 }
 

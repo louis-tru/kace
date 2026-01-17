@@ -1,5 +1,6 @@
 "use strict";
 
+import * as dom from "./lib/dom";
 import {EventEmitter}from "./lib/event_emitter";
 import * as lang from "./lib/lang";
 import {Range,Point, Delta, IRange} from "./range";
@@ -9,7 +10,6 @@ import {Tokenizer}from "./tokenizer";
 import * as clipboard from "./clipboard";
 import {Editor} from "./editor";
 import type { EditSession } from "./edit_session";
-import {createCss} from "quark";
 
 export type Snippet = {
 	content?: string;
@@ -164,6 +164,7 @@ export class SnippetManager extends EventEmitter<any> {
 	public snippetNameMap: Dict<Dict<Snippet>>;
 	public variables: typeof VARIABLES;
 	static $tokenizer?: Tokenizer;
+	public files?: Dict;
 
 	constructor() {
 		super();
@@ -1153,7 +1154,7 @@ var moveRelative = function(point: Point, start: Point) {
 	point.row -= start.row;
 };
 
-createCss({
+dom.importCss({
 '.ace_snippet-marker': {
 		// -moz-box-sizing: border-box;
 		// box-sizing: border-box;
@@ -1162,9 +1163,15 @@ createCss({
 		border: '1 rgba(150, 150, 150, 0.2)',
 		// position: absolute;
 	}
-})// "snippets.css", false);
+}, "snippets.css", false);
 
 export const snippetManager = new SnippetManager();
+
+export interface TabstopManagerEditorExtension {
+	tabstopManager?: TabstopManager;
+	insertSnippet(content: any, options: {}): void;
+	expandSnippet(options: {}): any;
+}
 
 (function(this: Editor) {
 	this.insertSnippet = function(content, options) {

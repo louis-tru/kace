@@ -48,7 +48,7 @@ export interface AcePopupEventsExtension {
 	"quadclick": (e: MouseEvent, emitter: AcePopup) => void;
 	"show": (e: undefined, emitter: AcePopup) => void;
 	"hide": (e: undefined, emitter: AcePopup) => void;
-	// "select": (hide: boolean, emitter: AcePopup) => void;
+	"select": (e: undefined, emitter: AcePopup) => void;
 	"changeHoverMarker": (e: any, emitter: AcePopup) => void;
 }
 

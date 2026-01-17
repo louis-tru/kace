@@ -11,7 +11,7 @@
 
 /**
  * @typedef {import("../editor").Editor} Editor
- * @typedef {import("../../ace-internal").Ace.TooltipCommand} TooltipCommand
+ * @typedef {TooltipCommand} TooltipCommand
  */
 import {Tooltip} from "../tooltip";
 import {EventEmitter} from "../lib/event_emitter";
@@ -22,11 +22,11 @@ import type { Point } from "../range";
 import type {View,Box,Text} from "quark";
 import type { Editor } from "../editor";
 import type {Command} from "../keyboard/hash_handler";
-import type { ClickEvent, KeyEvent, TouchEvent, UIEvent, MouseEvent as UIMouseEvent } from "quark/event";
+import type { ClickEvent, UIEvent, MouseEvent as UIMouseEvent } from "quark/event";
 import type {EditSession} from "../edit_session";
 import type { MouseEvent } from "../mouse/mouse_event";
 
-const BUTTON_CLASS_NAME = 'command_bar_tooltip_button';
+export const BUTTON_CLASS_NAME = 'command_bar_tooltip_button';
 const VALUE_CLASS_NAME = 'command_bar_button_value';
 const CAPTION_CLASS_NAME = 'command_bar_button_caption';
 const KEYBINDING_CLASS_NAME = 'command_bar_keybinding';

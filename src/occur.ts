@@ -1,8 +1,8 @@
 "use strict";
 /**
  * @typedef {import("./editor").Editor} Editor
- * @typedef {import("../ace-internal").Ace.Point} Point
- * @typedef {import("../ace-internal").Ace.SearchOptions} SearchOptions
+ * @typedef {Point} Point
+ * @typedef {SearchOptions} SearchOptions
  */
 
 import * as oop from "./lib/oop";

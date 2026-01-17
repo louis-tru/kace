@@ -2,6 +2,7 @@
 
 import * as lang from "./lib/lang";
 import {AppConfig} from "./lib/app_config";
+import type { SyntaxMode } from "./mode";
 
 export interface ConfigOptions {
 	packaged: boolean,
@@ -55,9 +56,9 @@ var reportErrorIfPathIsNotConfigured = function() {
 
 export class Config extends AppConfig {
 	/**
-	 * @template {keyof import("../ace-internal").Ace.ConfigOptions} K
+	 * @template {keyof ConfigOptions} K
 	 * @param {K} key - The key of the config option to retrieve.
-	 * @returns {import("../ace-internal").Ace.ConfigOptions[K]} - The value of the config option.
+	 * @returns {ConfigOptions[K]} - The value of the config option.
 	 */
 	get<K extends keyof ConfigOptions>(key: K): ConfigOptions[K] {
 		if (!options.hasOwnProperty(key))
@@ -66,9 +67,9 @@ export class Config extends AppConfig {
 	};
 
 	/**
-	 * @template {keyof import("../ace-internal").Ace.ConfigOptions} K
+	 * @template {keyof ConfigOptions} K
 	 * @param {K} key
-	 * @param {import("../ace-internal").Ace.ConfigOptions[K]} value
+	 * @param {ConfigOptions[K]} value
 	 */
 	set<K extends keyof ConfigOptions>(key: K, value: ConfigOptions[K]) {
 		if (options.hasOwnProperty(key))
@@ -80,13 +81,13 @@ export class Config extends AppConfig {
 	};
 
 	/**
-	 * @return {import("../ace-internal").Ace.ConfigOptions}
+	 * @return {ConfigOptions}
 	 */
 	all() {
 		return lang.copyObject(options);
 	};
 
-	$modes: { [key: string]: any } = {};
+	public $modes: { [key: string]: SyntaxMode } = {};
 
 	/**
 	 * module loading
@@ -136,7 +137,7 @@ export class Config extends AppConfig {
 		customLoader = cb;
 	};
 
-	dynamicModules: Dict = {};
+	public dynamicModules: Dict = {};
 	private $loading: Dict<((module: any) => void)[] | null> = {};
 	private $loaded: Dict = {};
 

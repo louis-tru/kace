@@ -8,7 +8,7 @@ import type { Point, Range } from "./range";
 /**
  * @typedef {import("./edit_session").EditSession} EditSession
  * @typedef {{range: import("./range").Range, className: string}} MarkerGroupItem
- * @typedef {import("../ace-internal").Ace.LayerConfig} LayerConfig
+ * @typedef {LayerConfig} LayerConfig
  */
 /**
  * @typedef {import("./layer/marker").Marker} Marker
@@ -50,8 +50,8 @@ export class MarkerGroup {
 
 	/**
 	 * Finds the first marker containing pos
-	 * @param {import("../ace-internal").Ace.Point} pos
-	 * @returns {import("../ace-internal").Ace.MarkerGroupItem | undefined}
+	 * @param {Point} pos
+	 * @returns {MarkerGroupItem | undefined}
 	 */
 	getMarkerAtPosition(pos: Point) {
 		return this.markers.find(function(marker) {

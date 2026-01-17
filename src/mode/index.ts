@@ -6,6 +6,11 @@ import type {EditSession} from "../edit_session";
 import type { Point, Range } from "../range";
 import { Completion } from "../autocomplete";
 
+// interface Outdent {
+// 	checkOutdent(line: string, input: string): boolean;
+// 	autoOutdent(doc: Document, row: number): number | undefined;
+// }
+
 export type HighlightRule = ({ defaultToken: string } | { include: string } | { todo: string } | {
 	token: string | string[] | ((value: string) => string);
 	regex: string | RegExp;

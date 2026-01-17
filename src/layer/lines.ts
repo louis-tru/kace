@@ -37,7 +37,7 @@ export class Lines<El extends Box = CellElement> {
 	private element: Morph;
 	public canvasHeight: number;
 	public cells: Cell<El>[] = [];
-	private cellCache: Cell<El>[] = [];
+	public cellCache: Cell<El>[] = [];
 	public $offsetCoefficient = 0;
 
 	/**

@@ -1,11 +1,14 @@
 "use strict";
+
 /**
  * @typedef {import("./edit_session").EditSession} EditSession
  */
 
 import * as bidiUtil from "./lib/bidiutil";
 import * as lang from "./lib/lang";
-import {Ace} from "../ace-internal";
+import type { Delta } from "./range";
+import type { Editor } from "./editor";
+import type { EditSession } from "./edit_session";
 
 var bidiRE = /[\u0590-\u05f4\u0600-\u06ff\u0700-\u08ac\u202B]/;
 
@@ -14,7 +17,7 @@ var bidiRE = /[\u0590-\u05f4\u0600-\u06ff\u0700-\u08ac\u202B]/;
  * including correct caret positioning, text selection mouse and keyboard arrows functioning
  **/
 export class BidiHandler {
-	session: Ace.EditSession;
+	session: EditSession;
 	bidiMap: any = {};
 	/* current screen row */
 	currentRow: number = -1;
@@ -39,7 +42,7 @@ export class BidiHandler {
 	 * Creates a new `BidiHandler` object
 	 * @param {EditSession} session The session to use
 	 **/
-	constructor(session: Ace.EditSession) {
+	constructor(session: EditSession) {
 		this.session = session;
 		this.seenBidi = bidiRE.test(session.getValue());
 	}
@@ -64,10 +67,10 @@ export class BidiHandler {
 	}
 
 	/**
-	 * @param {import("../ace-internal").Ace.Delta} delta
+	 * @param {Delta} delta
 	 * @internal
 	 */
-	onChange(delta: Ace.Delta) {
+	onChange(delta: Delta) {
 		if (!this.seenBidi) {
 			if (delta.action == "insert" && bidiRE.test(delta.lines.join("\n"))) {
 				this.seenBidi = true;
@@ -222,9 +225,9 @@ export class BidiHandler {
 			return this.isRtlDir;
 	}
 
-	setRtlDirection(editor: Ace.Editor, isRtlDir: boolean) {
+	setRtlDirection(editor: Editor, isRtlDir: boolean) {
 		var cursor = editor.getCursorPosition();
-		for (var row = editor.selection.getSelectionAnchor().row; row <= cursor.row; row++) {
+		for (var row = editor.selection.getAnchor().row; row <= cursor.row; row++) {
 			if (!isRtlDir && editor.session.getLine(row).charAt(0) === editor.session.$bidiHandler.RLE)
 				editor.session.doc.removeInLine(row, 0, 1);
 			else if (isRtlDir && editor.session.getLine(row).charAt(0) !== editor.session.$bidiHandler.RLE)

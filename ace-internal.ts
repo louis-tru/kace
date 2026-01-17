@@ -36,43 +36,14 @@ export declare namespace Ace {
 	type Tooltip = import("./src/tooltip").Tooltip;
 	type TextInput = import("./src/keyboard/textinput").TextInput;
 	type DiffChunk = import("./src/ext/diff/base_diff_view").DiffChunk;
+	type Theme = import("./src/theme").Theme;
 
 	type AfterLoadCallback = (err: Error | null, module: unknown) => void;
 	type LoaderFunction = (moduleName: string, afterLoad: AfterLoadCallback) => void;
 
 	type ConfigOptions = import("./src/config").ConfigOptions;
 
-	interface Theme {
-		cssClass?: string;
-		cssText?: string;
-		$id?: string;
-		padding?: number;
-		isDark?: boolean;
-		$showGutterCursorMarker?: boolean;
-	}
-
-	interface ScrollBar {
-		setVisible(visible: boolean): void;
-
-		[key: string]: any;
-	}
-
-	interface HScrollbar extends ScrollBar {
-		setWidth(width: number): void;
-	}
-
-	interface VScrollbar extends ScrollBar {
-		setHeight(width: number): void;
-	}
-
 	type LayerConfig = import("./src/layer/lines").LayerConfig;
-
-	interface CommandBarOptions {
-		maxElementsOnTooltip: number;
-		alwaysShow: boolean;
-		showDelay: number;
-		hideDelay: number;
-	}
 
 	type IRange = import("./src/range").IRange;
 
@@ -110,66 +81,15 @@ export declare namespace Ace {
 	type SyntaxMode = import("./src/mode").SyntaxMode;
 	type Command = import("./src/keyboard/hash_handler").Command;
 
-	interface Outdent {
-		checkOutdent(line: string, input: string): boolean;
-
-		autoOutdent(doc: Document, row: number): number | undefined;
-	}
-
-	interface OptionsBase {
-		[key: string]: any;
-	}
-
 	type OptionsProvider<T> = import("./src/lib/app_config").OptionsProvider<T>;
 
 	type KeyBinding = import("./src/keyboard/keybinding").KeyBinding;
-
-	interface CommandMap {
-		[name: string]: Command;
-	}
 
 	type CommandManager = import("./src/commands/command_manager").CommandManager;
 
 	type InlineAutocompleteAction = import("./src/autocomplete").InlineAutocompleteAction;
 
-	export type CommandBarTooltip = import("./src/ext/command_bar").CommandBarTooltip;
-
-	export type TokenizeResult = Array<Array<{
-		className?: string,
-		value: string,
-	}>>
-
-	export interface StaticHighlightOptions {
-		/** Syntax mode (e.g., 'ace/mode/javascript'). Auto-detected from CSS class if not provided */
-		mode?: string | SyntaxMode,
-		/** Color theme (e.g., 'ace/theme/textmate'). Defaults to 'ace/theme/textmate' */
-		theme?: string | Theme,
-		/** Whether to trim whitespace from code content */
-		trim?: boolean,
-		/** Starting line number for display */
-		firstLineNumber?: number,
-		/** Whether to show line numbers gutter */
-		showGutter?: boolean
-	}
-
-	export interface CommandBarEvents {
-		"hide": (e: undefined, emitter: import("./src/ext/command_bar").CommandBarTooltip) => void;
-		"show": (e: undefined, emitter: import("./src/ext/command_bar").CommandBarTooltip) => void;
-		"alwaysShow": (e: boolean, emitter: import("./src/ext/command_bar").CommandBarTooltip) => void;
-	}
-
-	export interface OptionPanelEvents {
-		"setOption": (e: { name: string, value: any }, emitter: import("./src/ext/options").OptionPanel) => void;
-	}
-
-	export interface ScrollbarEvents {
-		"scroll": (e: { data: number }, emitter: ScrollBar) => void;
-	}
+	type CommandBarTooltip = import("./src/ext/command_bar").CommandBarTooltip;
 
 	type EditorOptions = import("./src/editor").EditorOptions;
-}
-
-declare module "./src/ext/options" {
-	export interface OptionPanel extends Ace.EventEmitter<Ace.OptionPanelEvents> {
-	}
 }

@@ -70,8 +70,8 @@ export function overlayPage(editor: Editor, contentElement: View, callback?: () 
 	 * 
 	 * @param {Boolean} ignore      If set to true overlay stays open when focus moves to another part of the editor.
 	 */
-	function setIgnoreFocusOut(ignore: boolean) {
-		ignoreFocusOut = ignore;
+	function setIgnoreFocusOut(ignore?: boolean) {
+		ignoreFocusOut = !!ignore;
 		if (ignore) {
 			closer.style.receive = false;
 			contentElement.style.receive = true;

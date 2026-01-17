@@ -26,10 +26,10 @@
 import {InlineDiffView} from "./diff/inline_diff_view";
 import {SplitDiffView} from "./diff/split_diff_view";
 import {DiffProvider} from "./diff/providers/default";
-import type { Ace } from "../../ace-internal";
 import type {Editor} from "../editor";
 import type {EditSession} from "../edit_session";
 import type {DiffChunk} from "./diff/base_diff_view";
+import type { Theme } from "../theme";
 
 /**
  * Interface representing a model for handling differences between two views or states.
@@ -63,7 +63,7 @@ export interface DiffModel {
  * @property {boolean} [ignoreTrimWhitespace] - Whether to ignore trimmed whitespace when computing diffs
  * @property {boolean} [wrap] - Whether to enable word wrapping in both editors
  * @property {number} [maxDiffs=5000] - Maximum number of diffs to compute before failing silently
- * @property {string|Ace.Theme} [theme] - Theme to apply to both editors
+ * @property {string|Theme} [theme] - Theme to apply to both editors
  */
 
 export interface DiffViewOptions {
@@ -73,7 +73,7 @@ export interface DiffViewOptions {
 	ignoreTrimWhitespace?: boolean;
 	wrap?: boolean;
 	maxDiffs?: number;
-	theme?: string | Ace.Theme;
+	theme?: string | Theme;
 }
 
 /**

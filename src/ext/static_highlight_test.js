@@ -10,32 +10,32 @@ var config = require("../config");
 
 // Execution ORDER: test.setUpSuite, setUp, testFn, tearDown, test.tearDownSuite
 module.exports = {
-    timeout: 10000,
+	timeout: 10000,
 
-    "test loading in node": function(next) {
-        require("../test/mockdom").unload();
-        if (typeof process != "undefined")
-            assert.equal(typeof window, "undefined");
-        require("../ace");
-        next();
-    },
+	"test loading in node": function(next) {
+		require("../test/mockdom").unload();
+		if (typeof process != "undefined")
+			assert.equal(typeof window, "undefined");
+		require("../ace");
+		next();
+	},
 
-    "test simple snippet": function(next) {
-        var theme = require("../theme/tomorrow");
-        var snippet = [
-            "/** this is a function",
-            "*",
-            "*/",
-            "",
-            "function hello (a, b, c) {",
-            "    console.log(a * b + c + 'sup$');",
-            "           //",
-            "\t\t\t//",
-            "}"
-        ].join("\n");
-        var mode = new JavaScriptMode();
-        var result = highlighter.render(snippet, mode, theme);
-        assert.equal(result.html, `<div class='ace-tomorrow'><div class='ace_static_highlight ace_show_gutter' style='counter-reset:ace_line 0'><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_comment ace_doc'>/**</span><span class='ace_comment ace_doc ace_body'> this is a function</span>
+	"test simple snippet": function(next) {
+		var theme = require("../theme/tomorrow");
+		var snippet = [
+			"/** this is a function",
+			"*",
+			"*/",
+			"",
+			"function hello (a, b, c) {",
+			"    console.log(a * b + c + 'sup$');",
+			"           //",
+			"\t\t\t//",
+			"}"
+		].join("\n");
+		var mode = new JavaScriptMode();
+		var result = highlighter.render(snippet, mode, theme);
+		assert.equal(result.html, `<div class='ace-tomorrow'><div class='ace_static_highlight ace_show_gutter' style='counter-reset:ace_line 0'><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_comment ace_doc'>/**</span><span class='ace_comment ace_doc ace_body'> this is a function</span>
 </div><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_comment ace_doc ace_body'>*</span>
 </div><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_comment ace_doc'>*/</span>
 </div><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span>
@@ -45,88 +45,88 @@ module.exports = {
 </div><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_indent-guide'>    </span><span class='ace_indent-guide'>    </span>    <span class='ace_comment'>//</span>
 </div><div class='ace_line'><span class='ace_gutter ace_gutter-cell'></span><span class='ace_paren ace_rparen'>}</span>
 </div></div></div>`);
-        assert.ok(!!result.css);
-        next();
-    },
+		assert.ok(!!result.css);
+		next();
+	},
 
-    "test css from theme is used": function(next) {
-        var theme = require("../theme/tomorrow");
-        var snippet = [
-            "/** this is a function",
-            "*",
-            "*/",
-            "function hello (a, b, c) {",
-            "    console.log(a * b + c + 'sup?');",
-            "}"
-        ].join("\n");
-        var mode = new JavaScriptMode();
+	"test css from theme is used": function(next) {
+		var theme = require("../theme/tomorrow");
+		var snippet = [
+			"/** this is a function",
+			"*",
+			"*/",
+			"function hello (a, b, c) {",
+			"    console.log(a * b + c + 'sup?');",
+			"}"
+		].join("\n");
+		var mode = new JavaScriptMode();
 
-        var result = highlighter.render(snippet, mode, theme);
+		var result = highlighter.render(snippet, mode, theme);
 
-        assert.ok(result.css.indexOf(theme.cssText) !== -1);
+		assert.ok(result.css.indexOf(theme.cssText) !== -1);
 
-        next();
-    },
+		next();
+	},
 
-    "test theme classname should be in output html": function(next) {
-        var theme = require("../theme/tomorrow");
-        var snippet = [
-            "/** this is a function",
-            "*",
-            "*/",
-            "function hello (a, b, c) {",
-            "    console.log(a * b + c + 'sup?');",
-            "}"
-        ].join("\n");
-        var mode = new JavaScriptMode();
+	"test theme classname should be in output html": function(next) {
+		var theme = require("../theme/tomorrow");
+		var snippet = [
+			"/** this is a function",
+			"*",
+			"*/",
+			"function hello (a, b, c) {",
+			"    console.log(a * b + c + 'sup?');",
+			"}"
+		].join("\n");
+		var mode = new JavaScriptMode();
 
-        var result = highlighter.render(snippet, mode, theme);
-        assert.equal(!!result.html.match(/<div class='ace-tomorrow'>/), true);
+		var result = highlighter.render(snippet, mode, theme);
+		assert.equal(!!result.html.match(/<div class='ace-tomorrow'>/), true);
 
-        next();
-    },
-    
-    "test js string replace specials": function(next) {
-        var theme = require("../theme/tomorrow");
-        var snippet = "$'$1$2$$$&";
-        var mode = new TextMode();
+		next();
+	},
+	
+	"test js string replace specials": function(next) {
+		var theme = require("../theme/tomorrow");
+		var snippet = "$'$1$2$$$&";
+		var mode = new TextMode();
 
-        var result = highlighter.render(snippet, mode, theme);
-        assert.ok(result.html.indexOf("</span>$&#39;$1$2$$$&#38;\n</div>") != -1);
+		var result = highlighter.render(snippet, mode, theme);
+		assert.ok(result.html.indexOf("</span>$&#39;$1$2$$$&#38;\n</div>") != -1);
 
-        next();
-    },
-    
-    "test html special chars": function(next) {
-        var theme = require("../theme/tomorrow");
-        var snippet = "&<>'\"";
-        var mode = new TextMode();
+		next();
+	},
+	
+	"test html special chars": function(next) {
+		var theme = require("../theme/tomorrow");
+		var snippet = "&<>'\"";
+		var mode = new TextMode();
 
-        var result = highlighter.render(snippet, mode, theme);
-        assert.ok(result.html.indexOf("</span>&#38;&#60;>&#39;&#34;\n</div>") != -1);
-        
-        var mode = new JavaScriptMode();
-        var result = highlighter.render("/*" + snippet, mode, theme);
-        assert.ok(result.html.indexOf("<span class='ace_comment'>/*&#38;&#60;>&#39;&#34;</span>") != -1);
-        
-        next();
-    },
-    
-    "test async highlight": function(next) {
-        require("../test/mockdom");
-        EditSession.prototype.$modes["./mode/javascript"] = new JavaScriptMode();
-        var el = dom.buildDom(["div", {}, "var a = 1"]);
-        highlighter.highlight(el, {
-            theme: "./theme/tomorrow",
-            mode: "./mode/javascript"
-        }, function() {
-            assert.ok(/class="ace_storage ace_type">var/.test(el.innerHTML));
-            next();
-        });
-    }
+		var result = highlighter.render(snippet, mode, theme);
+		assert.ok(result.html.indexOf("</span>&#38;&#60;>&#39;&#34;\n</div>") != -1);
+		
+		var mode = new JavaScriptMode();
+		var result = highlighter.render("/*" + snippet, mode, theme);
+		assert.ok(result.html.indexOf("<span class='ace_comment'>/*&#38;&#60;>&#39;&#34;</span>") != -1);
+		
+		next();
+	},
+	
+	"test async highlight": function(next) {
+		require("../test/mockdom");
+		EditSession.prototype.$modes["./mode/javascript"] = new JavaScriptMode();
+		var el = dom.buildDom(["div", {}, "var a = 1"]);
+		highlighter.highlight(el, {
+			theme: "./theme/tomorrow",
+			mode: "./mode/javascript"
+		}, function() {
+			assert.ok(/class="ace_storage ace_type">var/.test(el.innerHTML));
+			next();
+		});
+	}
 };
 
 
 if (typeof module !== "undefined" && module === require.main) {
-    require("asyncjs").test.testcase(module.exports).exec();
+	require("asyncjs").test.testcase(module.exports).exec();
 }

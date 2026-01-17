@@ -121,7 +121,7 @@ export class Tokenizer {
 
 	/**
 	 * @param {string} str
-	 * @return {import("../ace-internal").Ace.Token[]}
+	 * @return {Token[]}
 	 */
 	$applyToken(str: string) {
 		var values = this.splitRegex.exec(str)!.slice(1);

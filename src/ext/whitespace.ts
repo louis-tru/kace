@@ -10,13 +10,10 @@
 
 "use strict";
 
-/**
- *
- * @typedef {import("../edit_session").EditSession} EditSession
- */
-
 import * as lang from "../lib/lang";
-import type { Ace } from "../../ace-internal";
+import type {EditSession} from "../edit_session";
+import type {Editor} from "../editor";
+import type { Command } from "../keyboard/hash_handler";
 
 // based on http://www.freehackers.org/Indent_Finder
 /**
@@ -41,7 +38,7 @@ export function $detectIndentation(lines: string[], fallback?: any) {
 			tabIndents++;
 			prevSpaces = -Number.MAX_VALUE;
 		} else {
-			var spaces = line.match(/^ */)[0].length;
+			var spaces = line.match(/^ */)![0].length;
 			if (spaces && line[spaces] != "\t") {
 				var diff = spaces - prevSpaces;
 				if (diff > 0 && !(prevSpaces%diff) && !(spaces%diff))
@@ -84,8 +81,9 @@ export function $detectIndentation(lines: string[], fallback?: any) {
 			first = {score: score, length: i};
 	}
 
+	var tabLength: number|undefined;
 	if (first.score && first.score > 1.4)
-		var tabLength = first.length;
+		tabLength = first.length;
 
 	if (tabIndents > spaceIndents + 1) {
 		if (tabLength == 1 || spaceIndents < tabIndents / 4 || first.score < 1.8)
@@ -102,9 +100,9 @@ export function $detectIndentation(lines: string[], fallback?: any) {
  * @param {EditSession} session The editing session to analyze and configure
  * @returns {{ch?: string, length?: number}|{}} An object containing detected indentation details (character and length)
  */
-export function detectIndentation(session: Ace.EditSession) {
+export function detectIndentation(session: EditSession) {
 	var lines = session.getLines(0, 1000);
-	var indent = $detectIndentation(lines) || {};
+	var indent = $detectIndentation(lines)! || {};
 
 	if (indent.ch)
 		session.setUseSoftTabs(indent.ch == " ");
@@ -121,7 +119,7 @@ export function detectIndentation(session: Ace.EditSession) {
  * @param {boolean} [options.trimEmpty] trim empty lines too
  * @param {boolean} [options.keepCursorPosition] do not trim whitespace before the cursor
  */
-export function trimTrailingSpace(session: Ace.EditSession, options?: {trimEmpty?: boolean, keepCursorPosition?: boolean}) {
+export function trimTrailingSpace(session: EditSession, options?: {trimEmpty?: boolean, keepCursorPosition?: boolean}) {
 	var doc = session.getDocument();
 	var lines = doc.getAllLines();
 	
@@ -129,9 +127,9 @@ export function trimTrailingSpace(session: Ace.EditSession, options?: {trimEmpty
 	var cursors = [], ci = -1;
 	if (options && options.keepCursorPosition) {
 		if (session.selection.rangeCount) {
-			session.selection.rangeList.ranges.forEach(function(x, i, ranges) {
+			session.selection.rangeList!.ranges.forEach(function(x, i, ranges) {
 			   var next = ranges[i + 1];
-			   if (next && next.cursor.row == x.cursor.row)
+			   if (next && next.cursor!.row == x.cursor!.row)
 				  return;
 			  cursors.push(x.cursor);
 			});
@@ -164,7 +162,7 @@ export function trimTrailingSpace(session: Ace.EditSession, options?: {trimEmpty
  * @param {string} ch
  * @param {number} len
  */
-export function convertIndentation(session: Ace.EditSession, ch: string, len: number) {
+export function convertIndentation(session: EditSession, ch: string, len: number) {
 	var oldCh = session.getTabString()[0];
 	var oldLen = session.getTabSize();
 	if (!len) len = oldLen;
@@ -175,11 +173,11 @@ export function convertIndentation(session: Ace.EditSession, ch: string, len: nu
 	var doc = session.doc;
 	var lines = doc.getAllLines();
 
-	var cache = {};
-	var spaceCache = {};
+	var cache: Dict<string> = {};
+	var spaceCache: Dict<string> = {};
 	for (var i = 0, l=lines.length; i < l; i++) {
 		var line = lines[i];
-		var match = line.match(/^\s*/)[0];
+		var match = line.match(/^\s*/)![0];
 		if (match) {
 			var w = session.$getStringScreenWidth(match)[0];
 			var tabCount = Math.floor(w/oldLen);
@@ -203,7 +201,7 @@ export function convertIndentation(session: Ace.EditSession, ch: string, len: nu
  * @returns {{}}
  */
 export function $parseStringArg(text: string) {
-	var indent = {};
+	var indent: {ch?: string, length?: number} = {};
 	if (/t/.test(text))
 		indent.ch = "\t";
 	else if (/s/.test(text))
@@ -224,30 +222,30 @@ export function $parseArg(arg: any) {
 	return arg;
 };
 
-export const commands: Ace.Command[] = [{
+export const commands: Command[] = [{
 	name: "detectIndentation",
 	description: "Detect indentation from content",
-	exec: function(editor: Ace.Editor) {
+	exec: function(editor: Editor) {
 		detectIndentation(editor.session);
 		// todo show message?
 	}
 }, {
 	name: "trimTrailingSpace",
 	description: "Trim trailing whitespace",
-	exec: function(editor: Ace.Editor, args?: {trimEmpty?: boolean, keepCursorPosition?: boolean}) {
+	exec: function(editor: Editor, args?: {trimEmpty?: boolean, keepCursorPosition?: boolean}) {
 		trimTrailingSpace(editor.session, args);
 	}
 }, {
 	name: "convertIndentation",
 	description: "Convert indentation to ...",
-	exec: function(editor: Ace.Editor, arg?: any) {
+	exec: function(editor: Editor, arg?: any) {
 		var indent = $parseArg(arg);
 		convertIndentation(editor.session, indent.ch, indent.length);
 	}
 }, {
 	name: "setIndentation",
 	description: "Set indentation",
-	exec: function(editor: Ace.Editor, arg?: any) {
+	exec: function(editor: Editor, arg?: any) {
 		var indent = $parseArg(arg);
 		indent.length && editor.session.setTabSize(indent.length);
 		indent.ch && editor.session.setUseSoftTabs(indent.ch == " ");

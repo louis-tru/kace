@@ -9,9 +9,9 @@ import type {UIEvent} from "quark/event";
 export type ExecEventHandler = (obj: {
 	editor: Editor,
 	command: Command,
-	args: any[],
-	returnValue?: any,
+	args: any,
 	event?: UIEvent,
+	returnValue?: any,
 }, emitter: CommandManager) => void;
 
 export type ExecArg = Parameters<ExecEventHandler>[0];
@@ -32,7 +32,7 @@ export interface CommandManager extends EventEmitter<CommandManagerEvents>, Incr
 }
 
 export class CommandManager extends MultiHashHandler {
-	public byName: Dict<Command>;
+	// public byName: Dict<Command>;
 	private $inReplay?: boolean;
 	private $addCommandToMacro?: (e: any) => void;
 	private macro: [Command, any][] = [];
@@ -46,11 +46,10 @@ export class CommandManager extends MultiHashHandler {
 	 **/
 	constructor(platform: Platform, commands: Command[]) {
 		super(commands, platform);
-		this.byName = this.commands;
+		// this.byName = this.commands;
 		this.setDefaultHandler("exec", function(e) {
-			if (!e.args) {
+			if (!e.args)
 				return e.command.exec!(e.editor, {}, e.event, true);
-			}
 			return e.command.exec!(e.editor, e.args, e.event, false);
 		});
 	}

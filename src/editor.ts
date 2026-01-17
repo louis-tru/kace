@@ -1,8 +1,10 @@
 "use strict";
 
+import './lib/ext'; // import extensions to quark.View and quark.event.KeyEvent
 import * as useragent from "./lib/env";
 import * as lang from "./lib/lang";
 import * as oop from "./lib/oop";
+import qk, {Window, Box, Text} from "quark";
 import {TextInput} from "./keyboard/textinput";
 import {MouseHandler, MouseHandlerOptions} from "./mouse/mouse_handler";
 import {FoldHandler} from "./mouse/fold_handler";
@@ -13,20 +15,18 @@ import { Range, Delta, Point, IRange } from "./range";
 import {EventEmitter} from "./lib/event_emitter";
 import {CommandManager} from "./commands/command_manager";
 import {commands as defaultCommands} from "./commands/default_commands";
-import config from "./config";
+import config, {nls} from "./config";
 import {TokenIterator} from "./token_iterator";
 import {GutterKeyboardHandler,GutterKeyboardEvent} from "./keyboard/gutter_handler";
 import * as clipboard from "./clipboard";
 import keys from './lib/keys';
 import {HoverTooltip} from "./tooltip";
-import {Ace} from "../ace-internal";
 import type {InlineAutocomplete} from "./ext/inline_autocomplete";
 import type {OptionsProvider} from "./lib/app_config";
 import type {GutterTooltip} from "./mouse/default_gutter_handler";
 import type { Composition, VirtualRenderer, VirtualRendererOptions } from "./virtual_renderer";
-import qk, {Window, Box, Text} from "quark";
 import type {KeyboardHandler, BindingCmd, Command} from "./keyboard/hash_handler";
-import type { KeyEvent } from "quark/event";
+import type { KeyEvent, UIEvent } from "quark/event";
 import type {MouseEvent,ClipboardEvent} from "./mouse/mouse_event";
 import type {EditorMultiSelectProperties} from './multi_select'
 import type { Vec2 } from "quark/types";
@@ -37,47 +37,23 @@ import type { AcePopupEventsExtension } from "./autocomplete/popup";
 import type { Autocomplete, Completer } from "./autocomplete";
 import type { Token } from "./background_tokenizer";
 import type { Selection } from "./selection";
-import './lib/ext'; // import extensions to quark.View and quark.event.KeyEvent
 import type { SearchBox } from "./ext/searchbox";
 import type {CodeLenseEditorExtension} from "./ext/code_lens";
-import type {ElasticTabstopsOptionsEditorExtension} from "./ext/elastic_tabstops_lite";
-import type {EmmetOptionsEditorExtension} from "./ext/emmet";
+import type {ElasticTabstopsOptions,ElasticTabstopsEditorExtension} from "./ext/elastic_tabstops_lite";
+import type {EmmetOptions} from "./ext/emmet";
+import type {LanguageToolsOptions} from "./ext/language_tools";
+import type {LinkingEventsEditorExtension,LinkingOptions} from "./ext/linking";
+import type {TabstopManagerEditorExtension} from "./snippets";
+import type {EmacsEditorExtension} from "./keyboard/emacs";
+import type {TextareaEditorExtension} from "./ext/textarea";
+import type {PromptEditorExtension} from "./ext/prompt";
+import type { SyntaxMode } from './mode';
+import type { Theme } from './theme';
 
-const nls = config.nls;
-
-export interface ElasticTabstopsEditorExtension {
-	elasticTabstops?: import("./ext/elastic_tabstops_lite").ElasticTabstopsLite;
-}
-
-export interface TextareaEditorExtension {
-	setDisplaySettings?: (settings: any) => void;
-}
-
-export interface PromptEditorExtension {
-	cmdLine?: Editor;
-}
-
-export interface OptionsEditorExtension {
-	$options?: any;
-}
-
-export interface EmacsEditorExtension {
-	setEmacsMark?: (p?: Point) => void;
-	pushEmacsMark?: (p?: Point, activate?: boolean) => void;
-	emacsMark?: () => Point | undefined;
-	showCommandLine?: (arg: any) => void;
-	popEmacsMark?: () => Point | undefined;
-	getLastEmacsMark?: (p?: Point) => Point | undefined;
-	emacsMarkForSelection?: (replacement?: Point) => Point;
-}
-
-export interface TabstopManagerEditorExtension {
-	tabstopManager?: import("./snippets").TabstopManager;
-	insertSnippet(content: any, options: {}): void;
-	expandSnippet(options: {}): any;
-}
-
-export interface EditorEvents extends AcePopupEventsExtension {
+export interface EditorEvents extends
+		AcePopupEventsExtension,
+		LinkingEventsEditorExtension
+{
 	"change": (delta: Delta, emitter: Editor) => void;
 	"changeSelection": (e: void, emitter: Editor) => void;
 	"input": (e: void, emitter: Editor) => void;
@@ -94,7 +70,7 @@ export interface EditorEvents extends AcePopupEventsExtension {
 	"mousewheel": (e: MouseEvent, emitter: Editor) => void;
 	"mouseup": (e: MouseEvent, emitter: Editor) => void;
 	"beforeEndOperation": (e: any, emitter: Editor) => void;
-	"nativecontextmenu": (e: any, emitter: Editor) => void;
+	"nativecontextmenu": (e: { target: Editor, domEvent: UIEvent}, emitter: Editor) => void;
 	"destroy": (e: any, emitter: Editor) => void;
 	"focus": (e: any, emitter: Editor) => void;
 	/**
@@ -111,7 +87,7 @@ export interface EditorEvents extends AcePopupEventsExtension {
 	 * @param data Contains one property, `data`, which indicates the new selection style
 	 **/
 	"changeSelectionStyle": (data: "fullLine" | "screenLine" | "text" | "line", emitter: Editor) => void;
-	"changeMode": (e: { mode?: Ace.SyntaxMode, oldMode?: Ace.SyntaxMode }, emitter: Editor) => void;
+	"changeMode": (e: { mode?: SyntaxMode, oldMode?: SyntaxMode }, emitter: Editor) => void;
 
 	//from searchbox extension
 	"findSearchBox": (e: { match: boolean }, emitter: Editor) => void;
@@ -140,8 +116,8 @@ export interface EditorOptions extends
 	MouseHandlerOptions,
 	VirtualRendererOptions,
 	IncrementalSearchOptions,
-	ElasticTabstopsOptionsEditorExtension,
-	EmmetOptionsEditorExtension
+	ElasticTabstopsOptions,
+	EmmetOptions, LanguageToolsOptions, LinkingOptions
 {
 	selectionStyle: "fullLine" | "screenLine" | "text" | "line";
 	highlightActiveLine: boolean;
@@ -153,11 +129,6 @@ export interface EditorOptions extends
 	behavioursEnabled: boolean;
 	wrapBehavioursEnabled: boolean;
 	enableAutoIndent: boolean;
-	enableBasicAutocompletion: boolean | Ace.Completer[];
-	enableLiveAutocompletion: boolean | Ace.Completer[];
-	liveAutocompletionDelay: number;
-	liveAutocompletionThreshold: number;
-	enableSnippets: boolean;
 	autoScrollEditorIntoView: boolean;
 	keyboardHandler: string | null;
 	placeholder: string;
@@ -175,7 +146,7 @@ export interface Editor extends EventEmitter<EditorEvents>,
 		EditorMultiSelectProperties,
 		OptionsProvider<EditorOptions>,
 		CodeLenseEditorExtension, ElasticTabstopsEditorExtension,
-		TextareaEditorExtension, PromptEditorExtension, OptionsEditorExtension, 
+		TextareaEditorExtension, PromptEditorExtension, 
 		EmacsEditorExtension, TabstopManagerEditorExtension {
 	session: EditSession;
 	$mergeUndoDeltas?: any,
@@ -294,7 +265,7 @@ export class Editor extends EventEmitter<EditorEvents> {
 	public curOp?: Operation;
 	public prevOp: Operation = {};
 	public selection: Selection;
-	private $lastSel?: Ace.Range | Ace.Range[];
+	private $lastSel?: Range | Range[];
 	private $mergeableCommands = ["backspace", "del", "insertstring"];
 	private $toggleWordPairs = [
 		["first", "last"],
@@ -322,7 +293,7 @@ export class Editor extends EventEmitter<EditorEvents> {
 		["==", "!="]
 	];
 
-	private $onEndOperation = (e?: Ace.Command) => {
+	private $onEndOperation = (e?: Command) => {
 		if (this.curOp && this.session) {
 			if (e && e.returnValue === 0) {
 				this.curOp = void 0;
@@ -582,10 +553,10 @@ export class Editor extends EventEmitter<EditorEvents> {
 
 	/**
 	 * {:VirtualRenderer.setTheme}
-	 * @param {string | Ace.Theme} theme The path to a theme
+	 * @param {string | Theme} theme The path to a theme
 	 * @param {() => void} [cb] optional callback called when theme is loaded
 	 **/
-	setTheme(theme: string | Ace.Theme, cb?: () => void) {
+	setTheme(theme: string | Theme, cb?: () => void) {
 		this.renderer.setTheme(theme, cb);
 	}
 
@@ -767,10 +738,10 @@ export class Editor extends EventEmitter<EditorEvents> {
 
 	/**
 	 * Emitted whenever the document is changed.
-	 * @param {import("../ace-internal").Ace.Delta} delta Contains a single property, `data`, which has the delta of changes
+	 * @param {Delta} delta Contains a single property, `data`, which has the delta of changes
 	 * @internal
 	 **/
-	private $onDocumentChange = (delta: Ace.Delta) => {
+	private $onDocumentChange = (delta: Delta) => {
 		// Rerender and emit "change" event.
 		var wrap = this.session.$useWrapMode;
 		var lastRow = (delta.start.row == delta.end.row ? delta.end.row : Infinity);
@@ -930,7 +901,7 @@ export class Editor extends EventEmitter<EditorEvents> {
 	 * @param e
 	 * @internal
 	 */
-	private $onChangeMode = (e: { mode?: Ace.SyntaxMode, oldMode?: Ace.SyntaxMode }) => {
+	private $onChangeMode = (e: { mode?: SyntaxMode, oldMode?: SyntaxMode }) => {
 		this.renderer.updateText();
 		this._emit("changeMode", e, this);
 	}

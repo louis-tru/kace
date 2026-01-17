@@ -1,16 +1,16 @@
 "use strict";
 
+import * as dom from '../lib/dom';
 import util from 'quark/util';
 import "../incremental_search";
 import * as iSearchCommandModule from "../commands/incremental_search_commands";
 import {BindingCmd, Command, HashHandler,HashHandlerExtensions} from "./hash_handler";
-import {createCss} from 'quark/css';
 import type {ClipboardEvent} from '../mouse/mouse_event';
 import type {Editor} from "../editor";
 import type {Point} from "../range";
 import type { EditSession } from "../edit_session";
 
-createCss({
+dom.importCss({
 	'.emacs-mode .ace_cursor': {
 		// border: 1px rgba(50,250,50,0.8) solid!important;
 		border: '1 rgba(50,250,50,0.8)',
@@ -34,7 +34,17 @@ createCss({
 	'.emacs-mode .ace_cursor-layer ': {
 		zIndex: 2,
 	},
-})//, 'emacsMode');
+}, 'emacsMode');
+
+export interface EmacsEditorExtension {
+	setEmacsMark?: (p?: Point) => void;
+	pushEmacsMark?: (p?: Point, activate?: boolean) => void;
+	emacsMark?: () => Point | undefined;
+	showCommandLine?: (arg: any) => void;
+	popEmacsMark?: () => Point | undefined;
+	getLastEmacsMark?: (p?: Point) => Point | undefined;
+	emacsMarkForSelection?: (replacement?: Point) => Point;
+}
 
 export type EmacsData = {
 	count?: number,

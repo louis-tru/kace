@@ -1,11 +1,11 @@
 "use strict";
 
-import type { Ace } from "../ace-internal";
 import {EventEmitter} from "./lib/event_emitter";
 import {Editor} from "./editor";
 import {VirtualRenderer as Renderer} from "./virtual_renderer";
 import {EditSession} from "./edit_session";
 import { View, Text } from "quark";
+import type { Theme } from "./theme";
 
 export interface SplitEvents {
 	"focus": (editor: Editor) => void;
@@ -15,14 +15,14 @@ export class Split extends EventEmitter<SplitEvents> {
 	private BELOW = 1;
 	private BESIDE = 0;
 	private $container: View;
-	private $theme: string | Ace.Theme;
+	private $theme: string | Theme;
 	private $splits: number = 0;
 	private $editorCSS: string = "";
 	private $editors: Editor[] = [];
 	private $orientation: number;
 	private $cEditor: Editor;
 
-	constructor(container: View, theme: string | Ace.Theme, splits?: number) {
+	constructor(container: View, theme: string | Theme, splits?: number) {
 		super();
 		this.$container = container;
 		this.$container.style.layout = "free"; // force absolute positioning of children
@@ -147,7 +147,7 @@ export class Split extends EventEmitter<SplitEvents> {
 	 * @related Editor.setTheme
 	 * @this {Split}
 	 **/
-	setTheme(theme: string| Ace.Theme) {
+	setTheme(theme: string| Theme) {
 		this.$editors.forEach(function(editor) {
 			editor.setTheme(theme);
 		});

@@ -3,19 +3,19 @@
 import {Range} from "./range";
 import {preventParentScroll} from "./lib/scroll";
 import qk, {Window, View,Text} from "quark";
-import type {Ace} from "../ace-internal";
 import {MouseEvent} from "./mouse/mouse_event";
 import type { Editor } from "./editor";
 import type {KeyEvent, MouseEvent as UIMouseEvent} from "quark/event";
 import type { EditSession } from "./edit_session";
 import {KeyboardKeyCode} from "quark/keyboard";
+import type { Theme } from "./theme";
 
 const CLASSNAME = "ace_tooltip";
 
 export class Tooltip {
 	public isOpen: boolean;
 	public $element?: Text;
-	private theme?: Ace.Theme;
+	private theme?: Theme;
 	readonly $parentNode: View;
 	public priority: number = 0;
 	readonly window: Window;
@@ -78,9 +78,9 @@ export class Tooltip {
 	}
 
 	/**
-	 * @param {Ace.Theme} theme
+	 * @param {Theme} theme
 	 */
-	setTheme(theme: Ace.Theme) {
+	setTheme(theme: Theme) {
 		if (this.theme) {
 			this.theme.isDark && this.getElement().cssclass.remove("ace_dark");
 			this.theme.cssClass && this.getElement().cssclass.remove(this.theme.cssClass);
@@ -224,8 +224,8 @@ export class HoverTooltip extends Tooltip {
 	private lastEvent?: MouseEvent;
 	private range?: Range;
 	private marker?: number;
-	private $markerSession?: Ace.EditSession;
-	private $gatherData: (event: MouseEvent, editor: Ace.Editor) => void = function() {};
+	private $markerSession?: EditSession;
+	private $gatherData: (event: MouseEvent, editor: Editor) => void = function() {};
 	public $fromKeyboard: boolean = false;
 
 	/**

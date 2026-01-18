@@ -168,7 +168,7 @@ export class Lines<El extends Box = CellElement> {
 			};
 		}
 		cell.row = row;
-		// cell.element.visible = true; // make sure the element is visible
+		cell.element.visible = true; // make sure the element is visible
 
 		return cell;
 	}

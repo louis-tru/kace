@@ -10,7 +10,6 @@ import type { Editor } from "../../editor";
 import type { EditSession } from "../../edit_session";
 import type { MouseEvent } from "../../mouse/mouse_event";
 import type { MouseEvent as UIMouseEvent, UIEvent} from "quark/event";
-import type { Marker } from "../../layer/marker";
 
 export class InlineDiffView extends BaseDiffView {
 	/**
@@ -33,8 +32,6 @@ export class InlineDiffView extends BaseDiffView {
 	otherEditor: Editor;
 	otherSession: EditSession;
 	showSideA: boolean;
-	// syncSelectionMarkerA: {id: number};
-	// syncSelectionMarkerB: {id: number};
 	othertextInput: Editor["textInput"];
 	otherEditorContainer: Editor["container"];
 	scheduleRealign: () => void;

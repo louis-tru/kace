@@ -15,8 +15,9 @@ import type { Text, View } from "quark";
 import type { Point } from "../range";
 import type { EditSession } from "../edit_session";
 import type { VirtualRenderer } from "../virtual_renderer";
-import {Editor} from "../editor";
 import type { UIEvent } from "quark/event";
+import {Editor} from "../editor";
+import config from "../config";
 
 /**
  * Provider interface for code lens functionality
@@ -291,8 +292,6 @@ export function registerCodeLensProvider(editor: Editor, codeLensProvider: CodeL
 export function clear(session: EditSession) {
 	setLenses(session);
 };
-
-import config from "../config";
 
 config.defineOptions(Editor.prototype, "editor", {
 	enableCodeLens: {

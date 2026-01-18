@@ -9,10 +9,6 @@
  * @module
  */
 
-/**
- * @typedef {import("../editor").Editor} Editor
- * @typedef {TooltipCommand} TooltipCommand
- */
 import {Tooltip} from "../tooltip";
 import {EventEmitter} from "../lib/event_emitter";
 import * as lang from "../lib/lang";
@@ -638,10 +634,8 @@ dom.importCss({
 	itemsAlign: 'center',
 },
 
-// div.${BUTTON_CLASS_NAME}.ace_selected,
-// div.${BUTTON_CLASS_NAME}:hover:not(.ace_disabled)
-[`.${BUTTON_CLASS_NAME}.ace_selected,
-.${BUTTON_CLASS_NAME}:hover`]:{
+// div.${BUTTON_CLASS_NAME}.ace_selected,div.${BUTTON_CLASS_NAME}:hover:not(.ace_disabled)
+[`.${BUTTON_CLASS_NAME}.ace_selected,.${BUTTON_CLASS_NAME}:hover`]:{
 	backgroundColor: 'rgba(0, 0, 0, 0.1)',
 },
 
@@ -708,8 +702,7 @@ dom.importCss({
 
 // .ace_dark div.${BUTTON_CLASS_NAME}.ace_selected,
 // .ace_dark div.${BUTTON_CLASS_NAME}:hover:not(.ace_disabled) {
-[`.ace_dark .${BUTTON_CLASS_NAME}.ace_selected,
-.ace_dark .${BUTTON_CLASS_NAME}:hover`]: {
+[`.ace_dark .${BUTTON_CLASS_NAME}.ace_selected,.ace_dark .${BUTTON_CLASS_NAME}:hover`]: {
 	backgroundColor: 'rgba(255, 255, 255, 0.1)',
 },
 

@@ -2118,7 +2118,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 				throw new Error("couldn't load module " + theme + " or it didn't call define");
 			if (module.$id)
 				_self.$themeId = module.$id;
-			// TODO ... use Quark's CSS handling
 			// dom.importCssString(
 			// 	module.cssText,
 			// 	module.cssClass,

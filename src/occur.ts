@@ -5,13 +5,13 @@
  * @typedef {SearchOptions} SearchOptions
  */
 
+import * as dom from "./lib/dom";
 import * as oop from "./lib/oop";
 import {Search, SearchOptions} from "./search";
 import {SearchHighlight} from "./search_highlight";
 import {EditSession} from "./edit_session";
 import type {Editor} from "./editor";
 import type {Point} from "./range";
-import {createCss} from 'quark';
 
 /**
  * Finds all lines matching a search term in the current [[Document
@@ -153,7 +153,7 @@ export class Occur extends Search {
 	}
 }
 
-createCss({
+dom.importCss({
 	".ace_occur-highlight": {
 		borderRadius: 4,
 		backgroundColor: "rgba(87, 255, 8, 0.25)",
@@ -166,5 +166,4 @@ createCss({
 		backgroundColor: "rgb(80, 140, 85)",
 		boxShadow: "0 0 4 rgb(60, 120, 70)",
 	}
-});
-// "incremental-occur-highlighting", false);
+}, "incremental-occur-highlighting", false);

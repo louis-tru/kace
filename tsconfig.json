@@ -37,6 +37,7 @@
 		".git",
 		"project",
 		"node_modules",
-		// "src"
+		"types",
+		"tool",
 	]
 }

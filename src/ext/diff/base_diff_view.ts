@@ -4,13 +4,12 @@ import {IRange, Point, Range} from "../../range";
 import config from "../../config";
 import {LineWidgets} from "../../line_widgets";
 import {ScrollDiffDecorator} from "./scroll_diff_decorator";
-import "./styles-css";
-
 import {Editor,EditorOptions} from "../../editor";
 import {VirtualRenderer as Renderer} from "../../virtual_renderer";
 import {UndoManager} from "../../undomanager";
 import {Decorator} from "../../layer/decorators";
 
+import "./styles-css";
 import "../../theme/textmate";
 import "../../multi_select"; // enable multiselect
 

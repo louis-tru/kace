@@ -35,6 +35,7 @@ dom.importCss({
 		borderRightWidth: 0,
 		borderBottomLeftRadius: 5,
 		// right: 0,
+		align: 'end',
 	},
 
 	'.ace_search_form, .ace_replace_form': {
@@ -43,7 +44,7 @@ dom.importCss({
 		marginLeft: 0,
 		marginRight: 20,
 		// overflow: 'hidden',
-		textLineHeight: 1.9,
+		textLineHeight: 2.01, // 1.9
 	},
 
 	'.ace_replace_form': {

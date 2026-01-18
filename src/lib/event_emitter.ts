@@ -63,12 +63,10 @@ export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 			return defaultHandler(e, this);
 	}
 
-	// _emit<K extends keyof T>(eventName: K, ...args: EmitParameters<T[K]>): void;
 	_emit<K extends keyof T>(eventName: K, ...args: EmitParameters<T[K]>): void {
 		return this._dispatchEvent(eventName, ...args);
 	}
 
-	// _signal<K extends keyof T>(eventName: K, ...args: EmitParameters<T[K]>): void;
 	_signal<K extends keyof T>(eventName: K, ...args: EmitParameters<T[K]>): void {
 		let listeners = this._eventRegistry?.[eventName];
 		if (!listeners)
@@ -80,12 +78,10 @@ export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 
 	/* ---------------- listener API ---------------- */
 
-	// on<K extends keyof T>(name: K, callback: T[K], capturing?: boolean): T[K];
 	on<K extends keyof T>(name: K, callback: T[K], capturing?: boolean): T[K] {
 		return this.addEventListener(name, callback, capturing);
 	}
 
-	// addEventListener<K extends keyof T>(name: K, callback: T[K], capturing?: boolean): T[K];
 	addEventListener<K extends keyof T>(name: K, callback: T[K], capturing?: boolean): T[K] {
 		this._eventRegistry ||= {};
 
@@ -99,17 +95,14 @@ export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 		return callback;
 	}
 
-	// off<K extends keyof T>(name: K, callback: T[K]): void;
 	off<K extends keyof T>(name: K, callback: T[K]): void {
 		this.removeEventListener(name, callback);
 	}
 
-	// removeListener<K extends keyof T>(name: K, callback: T[K]): void;
 	removeListener<K extends keyof T>(name: K, callback: T[K]): void {
 		this.removeEventListener(name, callback);
 	}
 
-	// removeEventListener<K extends keyof T>(name: K, callback: T[K]): void;
 	removeEventListener<K extends keyof T>(name: K, callback: T[K]): void {
 		const listeners = this._eventRegistry?.[name];
 		if (!listeners) return;
@@ -118,7 +111,6 @@ export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 		if (index !== -1) listeners.splice(index, 1);
 	}
 
-	// removeAllListeners(name?: string): void;
 	removeAllListeners(name?: keyof T): void {
 		if (!name) {
 			this._eventRegistry = undefined;
@@ -131,7 +123,6 @@ export class EventEmitter<T extends { [K in keyof T]: AnyFn } = Dict<AnyFn>> {
 
 	/* ---------------- once ---------------- */
 
-	// once<K extends keyof T>(eventName: K, callback: T[K]): void;
 	once<K extends keyof T>(eventName: K, callback: T[K]): void {
 		var _self = this;
 		this.on(eventName, function newCallback(this: any, ...args: any[]) {

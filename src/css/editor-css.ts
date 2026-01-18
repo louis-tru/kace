@@ -1,5 +1,5 @@
 
-import {createCss} from 'quark';
+import * as dom from "../lib/dom";
 /*
 styles = []
 for (var i = 1; i < 16; i++) {
@@ -12,7 +12,7 @@ for (var i = 1; i < 16; i++) {
 styles'.join("\\n")':
 */
 
-createCss({
+dom.importCss({
 '.ace_br1': {borderTopLeftRadius    : 3},
 '.ace_br2': {borderTopRightRadius   : 3},
 '.ace_br3': {borderTopLeftRadius    : 3, borderTopRightRadius:    3},
@@ -74,7 +74,7 @@ createCss({
 // 	outline: none,
 // },
 
-// '.ace_dragging': '.ace_scroller':before: {
+// '.ace_dragging .ace_scroller:before: {
 // 	position: absolute;
 // 	top: 0;
 // 	left: 0;
@@ -85,11 +85,9 @@ createCss({
 // 	z-index: 1000;
 // },
 
-'.ace_dragging.ace_dark':
-// .ace_scroller:before:
-{
-	backgroundColor: 'rgba(0, 0, 0, 0.01)',
-},
+// '.ace_dragging.ace_dark .ace_scroller:before':{
+// 	backgroundColor: 'rgba(0, 0, 0, 0.01)',
+// },
 
 '.ace_gutter': {
 	// position: absolute;
@@ -209,6 +207,7 @@ createCss({
 // 	right: 0;
 // 	bottom: 0;
 	zIndex: 6,
+	align: 'rightBottom',
 },
 
 '.ace_scrollbar-inner': {
@@ -257,10 +256,11 @@ createCss({
 	// -webkit-user-select: text,
 	// user-select: text,
 	/*with \`pre-line\` chrome inserts &nbsp; instead of space*/
-	// white-space: pre!important;
+	textWhiteSpace: 'pre', // !important
 },
 '.ace_text-input.ace_composition': {
 	// background: transparent;
+	backgroundColor: '#0000',
 	// color: inherit;
 	zIndex: 1000,
 	opacity: 1,
@@ -292,7 +292,7 @@ createCss({
 	// overflow: hidden;
 	/* workaround for chrome bug https://github'.com/ajaxorg/ace/issues/2312*/
 	// word-wrap: 'normal',
-	// white-space: pre;
+	textWhiteSpace: 'pre',
 	height: '100%',
 	width: '100%',
 	// box-sizing: border-box;
@@ -302,12 +302,12 @@ createCss({
 },
 
 '.ace_gutter-layer': {
-// 	position: relative;
-// 	width: auto;
+	// position: relative;
+	// width: auto;
 	textAlign: 'right',
 	receive: true,
 	height: 100000,
-// 	contain: style size layout;
+	// contain: style size layout;
 },
 
 '.ace_text-layer': {
@@ -444,7 +444,7 @@ createCss({
 // 	display: inline-block;
 	height: 11,
 	marginTop: -2,
-// 	vertical-align: middle;
+// vertical-align: middle;
 	align: 'middle',
 
 // 	background-image:
@@ -452,7 +452,7 @@ createCss({
 // 		url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA3CAYAAADNNiA5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACJJREFUeNpi+P//fxgTAwPDBxDxD078RSX+YeEyDFMCIMAAI3INmXiwf2YAAAAASUVORK5CYII=");
 // 	background-repeat: no-repeat, repeat-x;
 // 	background-position: center center, top left;
-// 	color: transparent;
+	textColor: '#0000',
 
 	border: '1 #000',
 	borderRadius: 2,
@@ -484,17 +484,17 @@ createCss({
 	textWhiteSpace: 'preWrap',
 	textWordBreak: 'breakWord',
 	textLineHeight: 0, // auto/normal
-	// font-style: normal;
-	textWeight: 'regular',
+	textSlant: 'normal', // font-style: normal;
+	textWeight: 'normal',
 	// letter-spacing: normal;
 	receive: false,
 	// overflow: auto;
 	// max-width: min(33em, 66vw);
 	// overscroll-behavior: contain;
 },
-// '.ace_tooltip pre': {
-// 	white-space: pre-wrap;
-// },
+'.ace_tooltip .pre': {
+	textWhiteSpace: 'preWrap',
+},
 
 '.ace_tooltip.ace_dark': {
 	backgroundColor: '#636363',
@@ -615,7 +615,7 @@ createCss({
 '.ace_fade-fold-widgets:normal .ace_fold-widget': {
 // 	transition: opacity 0.4s ease 0.05s;
 	opacity: 0,
-	time: 50,
+	time: 400,
 },
 
 '.ace_fade-fold-widgets:hover .ace_fold-widget': {
@@ -688,7 +688,7 @@ createCss({
 '.ace_placeholder': {
 // 	position: relative;
 	textFamily: 'arial',
-// 	transform: scale(0'.9);':
+// 	transform: scale(0.9);
 // 	transform-origin: left;
 	textWhiteSpace: 'pre',
 	opacity: 0.7,
@@ -701,9 +701,9 @@ createCss({
 	textSlant: 'italic',
 },
 
-// '.ace_ghost_text_container > div' {
-// 	white-space: pre;
-// },
+'.ace_ghost_text_container > .div': {
+	textWhiteSpace: 'pre',
+},
 
 // '.ghost_text_line_wrapped::after': {
 // 	content: "↩";
@@ -716,8 +716,7 @@ createCss({
 
 '.ace_screenreader-only': {
 	// position:absolute;
-	// left:-10000px;
-	marginLeft: -10000,
+	marginLeft: -10000, // left:-10000px;
 	// top:auto;
 	width: 1,
 	height: 1,
@@ -727,4 +726,4 @@ createCss({
 '.ace_hidden_token': {
 	// display: none;
 },
-});
+}, "ace_editor.css", false);

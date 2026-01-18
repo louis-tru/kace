@@ -178,7 +178,7 @@ dom.importCss({
 	border: "1 #66b2f0",
 },
 ".ace-cloud_editor_dark .ace_tooltip.ace_hover-tooltip:focus > div": {
-	// // outline: "1 #44b9d6",
+	// outline: "1 #44b9d6",
 },
 ".ace-cloud_editor_dark .ace_snippet-marker": {
 	backgroundColor: "#434650",

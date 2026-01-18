@@ -1,11 +1,12 @@
 "use strict";
 
+import * as dom from "../lib/dom";
 import {VirtualRenderer as Renderer} from "../virtual_renderer";
 import {Editor} from "../editor";
 import {Range,Point} from "../range";
 import * as lang from "../lib/lang";
 import config from "../config";
-import {Window,Text,View,createCss} from "quark";
+import {Window,Text,View} from "quark";
 import type { Completion, AcePopupNavigation } from "../autocomplete";
 import { getChildren } from "../lib/dom";
 import {MouseEvent} from "../mouse/mouse_event";
@@ -479,7 +480,7 @@ export class AcePopup extends Editor {
 	}
 }
 
-createCss({
+dom.importCss({
 	'.ace_editor.ace_autocomplete .ace_marker-layer .ace_active-line': {
 		backgroundColor: '#CAD6FA',
 		zIndex: 1
@@ -537,17 +538,20 @@ createCss({
 		itemsAlign: 'center',
 	},
 	// '.ace_autocomplete .ace_line > *': {
-	// 	minWidth: 0,
-	// 	maxWidth: 'auto',
-	// 	// flex: 0 0 auto;
-	// },
+	'.ace_autocomplete .ace_line .stars': {
+		minWidth: 0,
+		maxWidth: 'auto',
+		// flex: 0 0 auto;
+		weight: 0,
+	},
 	'.ace_autocomplete .ace_line .ace_': {
 		// flex: 0 1 auto;
+		weight: [0,1],
 		// overflow: hidden;
 		textOverflow: 'ellipsis',
 	},
 	'.ace_autocomplete .ace_completion-spacer': {
-		// flex: 1;
+		weight: 1
 	},
 	// '.ace_autocomplete.ace_loading:after': {
 		// content: "";
@@ -572,4 +576,4 @@ createCss({
 	// 		animation: none;
 	// 	 }
 	// }
-});//	`, "autocompletion.css", false);
+}, "autocompletion.css", false);

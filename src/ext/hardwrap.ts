@@ -39,7 +39,7 @@ export interface HardWrapOptions {
  * @param {HardWrapOptions} options - Configuration options for wrapping behavior
  */
 
-function hardWrap(editor: Editor, options: HardWrapOptions) {
+export function hardWrap(editor: Editor, options: HardWrapOptions) {
 	var max = options.column || editor.getOption("printMarginColumn");
 	var allowMerge = options.allowMerge != false;
 	   
@@ -156,5 +156,3 @@ config.defineOptions(Editor.prototype, "editor", {
 		value: false
 	}
 });
-
-exports.hardWrap = hardWrap;

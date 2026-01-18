@@ -25,8 +25,7 @@ dom.importCss({
 	'.emacs-mode .ace_overwrite-cursors .ace_cursor ': {
 		opacity: 1,
 		backgroundColor: '#0000',
-		// border-width: 0 0 2px 2px !important;
-		borderWidth: [0,0,2,2],
+		borderWidth: [0,0,2,2], // !important
 	},
 	'.emacs-mode .ace_text-layer ': {
 		zIndex: 4,

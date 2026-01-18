@@ -132,7 +132,6 @@ export class Config extends AppConfig {
 		return options.$moduleUrls[name] = subst;
 	};
 
-	/** @arg {(name: string, callback: (error: any, module: any) => void) => void} cb */
 	setLoader(cb: (name: string, callback: (error: any, module: any) => void) => void) {
 		customLoader = cb;
 	};

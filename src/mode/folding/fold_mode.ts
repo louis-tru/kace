@@ -39,9 +39,9 @@ export class FoldMode {};
 		return "";
 	};
 
-	// this.getFoldWidgetRange = function(session, foldStyle, row) {
-	// 	return null;
-	// };
+	this.getFoldWidgetRange = function(session, foldStyle, row) {
+		return undefined;
+	};
 
 	this.indentationBlock = function(session, row, column) {
 		var re = /\S/;

@@ -1,7 +1,4 @@
 "use strict";
-/**
- * @typedef {import("../edit_session").EditSession} EditSession
- */
 
 import type { EditSession } from "../edit_session";
 import type {Point} from "../range";

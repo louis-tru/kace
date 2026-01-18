@@ -202,7 +202,7 @@ dom.importCss({
 	textColor: "#0F68AE",
 },
 ".ace-cloud_editor.ace_editor.ace_autocomplete": {
-	boxShadow: "0 1 1 #001c244d, 1 1 1 0 #001c2426, -1 1 1 0 #001c2426",
+	boxShadow: ["0 1 1 #001c244d", "1 1 1 #001c2426", "-1 1 1 #001c2426"],
 	textLineHeight: 1.5,
 	border: "1 #eaeded",
 	backgroundColor: "#ffffff",

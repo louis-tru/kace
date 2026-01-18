@@ -1160,7 +1160,7 @@ dom.importCss({
 		// box-sizing: border-box;
 		backgroundColor: 'rgba(194, 193, 208, 0.09)',
 		// border: '1px dotted rgba(211, 208, 235, 0.62)';
-		border: '1 rgba(150, 150, 150, 0.2)',
+		border: '1 rgba(211, 208, 235, 0.62)',
 		// position: absolute;
 	}
 }, "snippets.css", false);

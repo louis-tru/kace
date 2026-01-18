@@ -25,7 +25,7 @@
  */
 
 "use strict";
-/**@type{import("../snippets").snippetManager & {files?: {[key: string]: any}}}*/
+
 import {snippetManager} from "../snippets";
 import {Autocomplete} from "../autocomplete";
 import config from "../config";

@@ -37,33 +37,19 @@ export declare namespace Ace {
 	type TextInput = import("./src/keyboard/textinput").TextInput;
 	type DiffChunk = import("./src/ext/diff/base_diff_view").DiffChunk;
 	type Theme = import("./src/theme").Theme;
-
-	type AfterLoadCallback = (err: Error | null, module: unknown) => void;
-	type LoaderFunction = (moduleName: string, afterLoad: AfterLoadCallback) => void;
-
 	type ConfigOptions = import("./src/config").ConfigOptions;
-
 	type LayerConfig = import("./src/layer/lines").LayerConfig;
-
 	type IRange = import("./src/range").IRange;
-
 	type NewLineMode = import("./src/document").NewLineMode;
-
 	type EditSessionEvents = import("./src/edit_session").EditSessionEvents;
 	type EditorEvents = import("./src/editor").EditorEvents;
-
 	type DocumentEvents = import("./src/document").DocumentEvents;
-
 	type AnchorEvents = import("./src/anchor").AnchorEvents;
-
 	type BackgroundTokenizerEvents = import("./src/background_tokenizer").BackgroundTokenizerEvents;
 	type BackgroundTokenizer = import("./src/background_tokenizer").BackgroundTokenizer;
-
 	type EventEmitter<T extends { [K in keyof T]: (...args: any[]) => any }> = import("./src/lib/event_emitter").EventEmitter<T>;
-
 	type Point = import("./src/range").Point;
 	type Delta = import("./src/range").Delta;
-
 	type MarkerGroup = import("./src/marker_group").MarkerGroup;
 	type BaseCompletion = import("./src/autocomplete").BaseCompletion;
 	type SnippetCompletion = import("./src/autocomplete").SnippetCompletion;
@@ -80,16 +66,10 @@ export declare namespace Ace {
 	type FoldMode = import("./src/mode/folding/fold_mode").FoldMode;
 	type SyntaxMode = import("./src/mode").SyntaxMode;
 	type Command = import("./src/keyboard/hash_handler").Command;
-
 	type OptionsProvider<T> = import("./src/lib/app_config").OptionsProvider<T>;
-
 	type KeyBinding = import("./src/keyboard/keybinding").KeyBinding;
-
 	type CommandManager = import("./src/commands/command_manager").CommandManager;
-
 	type InlineAutocompleteAction = import("./src/autocomplete").InlineAutocompleteAction;
-
 	type CommandBarTooltip = import("./src/ext/command_bar").CommandBarTooltip;
-
 	type EditorOptions = import("./src/editor").EditorOptions;
 }

@@ -1,5 +1,6 @@
 "use strict";
 
+import * as dom from "./lib/dom";
 import {Range} from "./range";
 import {Search} from "./search";
 import {SearchHighlight} from "./search_highlight";
@@ -9,7 +10,6 @@ import {Editor} from "./editor";
 import {IncrementalSearchExtension,CommandManager} from "./commands/command_manager";
 import config from "./config";
 import type {EditSession} from "./edit_session";
-import {createCss} from 'quark/css';
 
 // regexp handling
 
@@ -274,7 +274,7 @@ export class IncrementalSearch extends Search {
 /**
  * Config settings for enabling/disabling [[IncrementalSearch `IncrementalSearch`]].
  **/
-createCss({
+dom.importCss({
 	'.ace_marker-layer .ace_isearch-result': {
 		// position: absolute;
 		zIndex: 6,
@@ -291,7 +291,7 @@ createCss({
 		backgroundColor: 'rgb(100, 110, 160)',
 		boxShadow: '0 0 4 rgb(80, 90, 140)',
 	}
-}); // , "incremental-search-highlighting", false);
+}, "incremental-search-highlighting", false);
 
 // support for default keyboard handler
 (function(this: CommandManager) {

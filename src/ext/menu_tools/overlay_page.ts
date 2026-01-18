@@ -19,7 +19,6 @@
  * @module
  */
 
-
 /*jslint indent: 4, maxerr: 50, white: true, browser: true, vars: true*/
 /*global define, require */
 
@@ -82,11 +81,13 @@ export function overlayPage(editor: Editor, contentElement: View, callback?: () 
 		margin: 0,
 		padding: 0,
 		// position: "fixed",
-		// top: 0,
-		// bottom: 0,
-		// left: 0,
-		// right: 0,
+		marginTop: 0,// top: 0,
+		marginBottom: 0,// bottom: 0,
+		marginLeft: 0,// left: 0,
+		marginRight: 0,// right: 0,
 		zIndex: 9990,
+		width: 'match',
+		height: 'match',
 		backgroundColor: "rgba(0, 0, 0, 0.3)",
 	};
 

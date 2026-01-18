@@ -213,12 +213,9 @@ dom.importCss({
 	'.error_widget_arrow': {
 		// position: absolute;
 		borderWidth: 5,
-		// border-top-color: transparent!important;
-		// border-right-color: transparent!important;
-		// border-left-color: transparent!important;
-		borderTopColor: '#0000',
-		borderRightColor: '#0000',
-		borderLeftColor: '#0000',
+		borderTopColor: '#0000', // !important;
+		borderRightColor: '#0000', // !important;
+		borderLeftColor: '#0000', // !important;
 		marginTop: -5,
 	}
 }, "error_marker.css", false);

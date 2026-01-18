@@ -51,10 +51,10 @@ dom.importCss({
 },
 
 ".ace-ambiance .ace_scroller": {
-	// -webkit-// boxShadow: "inset 0 0 10 #000",
-	// -moz-// boxShadow: "inset 0 0 10 #000",
-	// -o-// boxShadow: "inset 0 0 10 #000",
-	// boxShadow: "inset 0 0 10 #000",
+	// -webkit-box-shadow: "inset 0 0 10 #000",
+	// -moz-box-shadow: "inset 0 0 10 #000",
+	// -o-box-shadow: "inset 0 0 10 #000",
+	// box-shadow: "inset 0 0 10 #000",
 },
 
 ".ace-ambiance": {

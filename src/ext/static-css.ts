@@ -10,8 +10,7 @@ dom.importCss({
 },
 
 ".ace_static_highlight .ace_gutter": {
-	// width: "2em",
-	width: 24, // textSize * 2
+	width: 24, // 2em, 12 * 2
 	textAlign: "right",
 	padding: [0, 3, 0, 0],
 	marginRight: 3,
@@ -19,7 +18,7 @@ dom.importCss({
 },
 
 ".ace_static_highlight.ace_show_gutter .ace_line": {
-	paddingLeft: 12 * 2.6,
+	paddingLeft: 12 * 2.6, // 2.6em
 },
 
 ".ace_static_highlight .ace_line": {
@@ -35,6 +34,7 @@ dom.importCss({
 	// "bottom": 0,
 	// "left": 0,
 	// "position": "absolute",
+	align: "bottom",
 },
 
 ".ace_static_highlight .ace_gutter-cell:before": {

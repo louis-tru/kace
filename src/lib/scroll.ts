@@ -1,9 +1,7 @@
 import { MouseEvent } from "quark/event";
 
 export function preventParentScroll(event: MouseEvent) {
-	// event.stopPropagation();
-	// TODO ... use quark event methods
-	event.cancelBubble();
+	event.stopPropagation();
 	// var target = event.currentTarget as HTMLElement;
 	// var contentOverflows = target.scrollHeight > target.clientHeight;
 	// if (!contentOverflows) {

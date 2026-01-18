@@ -11,9 +11,9 @@ dom.importCss({
 	// overflow: 'auto',
 	// position: 'absolute',
 	// margin: 0,
-	marginBottom: 0,
-	marginTop: 0,
-	marginRight: 0,
+	marginBottom: 0, // bottom: 0
+	marginTop: 0, // top: 0;
+	marginRight: 0, // right: 0
 	height: 'match',
 	align: 'end',
 	zIndex: 9991,
@@ -22,7 +22,6 @@ dom.importCss({
 
 '.ace_dark .ace_settingsmenu, .ace_dark .kbshortcutmenu': {
 	boxShadow: '-20 10 25 rgba(126, 126, 126, 0.25)',
-	// backgroundColor: 'rgba(255, 255, 255, 0.6)',
 	textColor: '#000',
 },
 
@@ -38,7 +37,6 @@ dom.importCss({
 },
 
 '.ace_closeButton': {
-	// backgroundColor: 'rgba(245, 146, 146, 0.5)',
 	backgroundColor: 'rgba(245, 146, 146, 0.9)',
 	border: '1 #F48A8A',
 	// borderRadius: '50%',

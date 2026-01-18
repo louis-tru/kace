@@ -24,7 +24,6 @@ export interface MarkerLike {
 				marker: Marker,
 				session: EditSession,
 				config: LayerConfig) => void;
-	// [key: string]: any;
 	setRegexp?(regExp?: RegExp): void;
 	regExp?: RegExp;
 }

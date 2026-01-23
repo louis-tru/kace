@@ -8,7 +8,7 @@ export function setLineMode(text: string | false) {
 	lineMode = text;
 }
 
-export function pasteCancelled() {
+export function isPasteCancelled() {
 	if ($cancelT && $cancelT > Date.now() - 50)
 		return true;
 	return $cancelT = false;

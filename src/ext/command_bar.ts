@@ -673,7 +673,7 @@ dom.importCss({
 [`.${KEYBINDING_CLASS_NAME}`]: {
 	margin: [0, 2],
 	// display: inline-block;
-	textSize: 8,
+	fontSize: 8,
 },
 
 [`.${TOOLTIP_CLASS_NAME}.tooltip_more_options .${KEYBINDING_CLASS_NAME}`]: {

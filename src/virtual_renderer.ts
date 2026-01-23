@@ -12,20 +12,20 @@ import {RenderLoop} from "./renderloop";
 import {FontMetrics} from "./layer/font_metrics";
 import {EventEmitter} from "./lib/event_emitter";
 import type {LayerConfig} from "./layer/lines";
-import type {Range} from "./range";
-import qk, {Window, Morph, Box, Textarea, Text, Label, StyleSheets} from "quark";
+import type {Range,Point} from "./range";
+import qk, {Window, Morph, Box, Text, Label, InputSink} from "quark";
 import {isTextToken} from "./layer/text_util";
 import type { OptionsProvider } from "./lib/app_config";
-import { Vec2, CursorStyle } from "quark/types";
+import { Vec2, CursorStyle, newRect } from "quark/types";
 import type { LineWidget } from './line_widgets';
 import type {Annotation} from "./layer/gutter";
 import type { Theme } from './theme';
 import type { EditSession } from './ace';
-import type { Point } from 'ace-code/src/edit_session/fold';
 import './css/editor-css';
 
 export type Composition = {
-	markerRange: Range; cssStyle?: StyleSheets; useTextareaForIME?: boolean; markerId?: number;
+	markerRange: Range;
+	markerId?: number;
 }
 
 export interface VirtualRendererEvents {
@@ -77,7 +77,7 @@ export interface VirtualRenderer extends
 	$printMarginColumn?: number,
 	$animatedScroll?: boolean,
 	$isMousePressed?: boolean,
-	textarea: Textarea, // TextArea
+	textarea: InputSink, // TextArea
 	$hScrollBarAlwaysVisible?: boolean,
 	$vScrollBarAlwaysVisible?: boolean
 	$maxLines?: number,
@@ -90,7 +90,7 @@ export interface VirtualRenderer extends
 	showInvisibles?: boolean,
 	$hasCssTransforms?: boolean,
 	$blockCursor?: boolean,
-	$useTextareaForIME?: boolean,
+	// $useTextareaForIME?: boolean,
 	theme?: any,
 	$theme?: any,
 	destroyed?: boolean,
@@ -190,7 +190,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 		this.container.cssclass.add('ace_editor');
 		this.container.style.layout = 'free'; // Use absolute free layout for all children
-		this.container.data = {};
 
 		this.setTheme(theme||'');
 
@@ -203,13 +202,11 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		this.scroller = new Text(window);
 		this.scroller.class = ["ace_scroller"];
 		this.scroller.style = { layout: 'free', width: 'match', height: 'match', align: 'end' };
-		this.scroller.data = {};
 		this.container.append(this.scroller);
 
 		this.content = new Morph(window);
 		this.content.class = ["ace_content"];
 		this.content.style.layout = 'free'; // absolute free layout
-		this.content.data = {};
 		this.scroller.append(this.content);
 
 		this.$gutterLayer = new GutterLayer(this.$gutter);
@@ -282,7 +279,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		this.lineHeight = this.$textLayer.getLineHeight();
 		this.$updatePrintMargin();
 		// set explicit line height to avoid normal resolving to different values based on text
-		this.scroller.style.textLineHeight = this.lineHeight;
+		this.scroller.style.lineHeight = this.lineHeight;
 	}
 
 	/**
@@ -782,15 +779,12 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 	// move text input over the cursor
 	// this is required for IME
-	/**
-	 */
 	$moveTextAreaToCursor() {
 		if (this.$isMousePressed) return;
 		var composition = this.$composition;
 		if (!this.$keepTextAreaAtCursor && !composition) {
 			// dom.translate(this.textarea, -100, 0);
-			this.textarea.marginLeft = -100;
-			this.textarea.marginTop = 0;
+			this.textarea.spotRect = newRect(-100, 0, 0, this.lineHeight);
 			return;
 		}
 		var pixelPos = this.$cursorLayer.$pixelPos;
@@ -804,11 +798,10 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 		var posLeft = pixelPos.left;
 		posTop -= config.offset;
 
-		var h = composition && composition.useTextareaForIME || ace.env.mobile ? this.lineHeight : 1;
+		var h = ace.env.mobile ? this.lineHeight : 1;
 		if (posTop < 0 || posTop > config.height - h) {
 			// dom.translate(this.textarea, 0, 0);
-			this.textarea.marginLeft = 0;
-			this.textarea.marginTop = 0;
+			this.textarea.spotRect = newRect(0, 0, 0, this.lineHeight);
 			return;
 		}
 
@@ -818,13 +811,7 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			posTop += this.lineHeight;
 		}
 		else {
-			if (composition.useTextareaForIME) {
-				var val = this.textarea.value;
-				w = this.characterWidth * (this.session.$getStringScreenWidth(val)[0]);
-			}
-			else {
-				posTop += this.lineHeight + 2;
-			}
+			posTop += this.lineHeight + 2;
 		}
 
 		posLeft -= this.scrollLeft;
@@ -833,12 +820,12 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 
 		posLeft += this.gutterWidth + this.margin.left;
 
-		// dom.setStyle(style, "height", h + "px");
-		this.textarea.style.height = h;
-		// dom.setStyle(style, "width", w + "px");
-		this.textarea.style.width = w;
+		// this.textarea.style.height = h;
+		// this.textarea.style.width = w;
 		// dom.translate(this.textarea, Math.min(posLeft, this.$size.scrollerWidth - w), Math.min(posTop, maxTop));
-		this.textarea.style.translate = Vec2.new(Math.min(posLeft, this.$size.scrollerWidth - w), Math.min(posTop, maxTop));
+		var x = Math.min(posLeft, this.$size.scrollerWidth - w);
+		var y = Math.min(posTop, maxTop);
+		this.textarea.spotRect = newRect(x, y, w, h);
 	}
 
 	/**
@@ -1815,28 +1802,28 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 	 **/
 	showComposition(composition: Composition) {
 		this.$composition = composition;
-		if (!composition.cssStyle) {
-			// composition.cssText = this.textarea.style.cssText;
-			composition.cssStyle = {
-				marginLeft: this.textarea.marginLeft,
-				marginTop: this.textarea.marginTop,
-				width: this.textarea.width,
-				height: this.textarea.height,
-			}
-		}
-		if (composition.useTextareaForIME == undefined)
-			composition.useTextareaForIME = this.$useTextareaForIME;
+		// if (!composition.cssStyle) {
+		// 	// composition.cssText = this.textarea.style.cssText;
+		// 	composition.cssStyle = {
+		// 		marginLeft: this.textarea.marginLeft,
+		// 		marginTop: this.textarea.marginTop,
+		// 		width: this.textarea.width,
+		// 		height: this.textarea.height,
+		// 	}
+		// }
+		// if (composition.useTextareaForIME == undefined)
+		// 	composition.useTextareaForIME = this.$useTextareaForIME;
 
-		if (this.$useTextareaForIME) {
-			this.textarea.cssclass.add("ace_composition");
-			// this.textarea.style.cssText = "";
-			this.textarea.style = {marginLeft: 0, marginTop: 0, width: 'auto', height: 'auto'};
-			this.$moveTextAreaToCursor();
-			this.$cursorLayer.element.visible = false;
-		}
-		else {
-			composition.markerId = this.session.addMarker(composition.markerRange, "ace_composition_marker", "text");
-		}
+		// if (this.$useTextareaForIME) {
+		// 	this.textarea.cssclass.add("ace_composition");
+		// 	// this.textarea.style.cssText = "";
+		// 	this.textarea.style = {marginLeft: 0, marginTop: 0, width: 'auto', height: 'auto'};
+		// 	this.$moveTextAreaToCursor();
+		// 	this.$cursorLayer.element.visible = false;
+		// }
+		// else {
+		composition.markerId = this.session.addMarker(composition.markerRange, "ace_composition_marker", "text");
+		// }
 	}
 
 	/**
@@ -1864,7 +1851,6 @@ export class VirtualRenderer extends EventEmitter<VirtualRendererEvents> {
 			this.session.removeMarker(this.$composition.markerId);
 
 		this.textarea.cssclass.remove("ace_composition");
-		this.textarea.style = this.$composition.cssStyle!;
 		var cursor = this.session.selection.cursor;
 		this.removeExtraToken(cursor.row, cursor.column);
 		this.$composition = void 0;
@@ -2399,14 +2385,14 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	},
 	fontSize: {
 		set: function(this: VirtualRenderer, size: number) {
-			(this.container as Text).style.textSize = size || 12;
+			(this.container as Text).style.fontSize = size || 12;
 			this.updateFontSize();
 		},
 		initialValue: 12
 	},
 	fontFamily: {
 		set: function(this: VirtualRenderer, name: string) {
-			(this.container as Text).style.textFamily = name;
+			(this.container as Text).style.fontFamily = name;
 			this.updateFontSize();
 		}
 	},
@@ -2453,8 +2439,8 @@ config.defineOptions(VirtualRenderer.prototype, "renderer", {
 	},
 	hasCssTransforms: {
 	},
-	useTextareaForIME: {
-		// initialValue: !useragent.isMobile && !useragent.isIE
-		initialValue: !ace.env.mobile
-	},
+	// useTextareaForIME: {
+	// 	// initialValue: !useragent.isMobile && !useragent.isIE
+	// 	initialValue: !ace.env.mobile
+	// },
 });

@@ -196,7 +196,7 @@ dom.importCss({
 		borderBottomWidth: 2,
 		margin: [5,0],
 		padding: [10, 40],
-		textWhiteSpace: 'preWrap',
+		whiteSpace: 'preWrap',
 	},
 	'.error_widget.ace_error, .error_widget_arrow.ace_error': {
 		borderColor: '#ff5a5a'

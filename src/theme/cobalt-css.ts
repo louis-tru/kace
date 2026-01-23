@@ -99,7 +99,7 @@ dom.importCss({
 },
 
 ".ace-cobalt .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#0088FF",
 },
 

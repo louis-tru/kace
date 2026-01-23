@@ -6,8 +6,8 @@ import {DefaultHandlers,DefaultHandlersExtension} from "./default_handlers";
 import {GutterHandler as DefaultGutterHandler} from "./default_gutter_handler";
 import {DragdropHandler,DragdropHandlerExtension} from "./dragdrop_handler";
 import {MouseEvent} from "./mouse_event";
-import type {ClickEvent, MouseEvent as UIMouseEvent} from "quark/event";
-import {addTouchListeners} from "./touch_handler";
+import type {ClickEvent, UIEvent, MouseEvent as UIMouseEvent} from "quark/event";
+// import {addTouchListeners} from "./touch_handler";
 import config from "../config";
 import type {Editor} from "../editor";
 import type {Range} from "../range";
@@ -86,7 +86,8 @@ export class MouseHandler {
 		].filter(Boolean), [400, 300, 250], this.onMouseEvent.bind(this), editor);
 		event.addMouseWheelListener(editor.container, this.onMouseWheel.bind(this, "mousewheel"), editor);
 
-		addTouchListeners(editor.container, editor);
+		// TODO: touch
+		// addTouchListeners(editor.container, editor);
 
 		var gutterEl = editor.renderer.$gutter;
 		event.addListener(gutterEl, "MouseDown", this.onMouseEvent.bind(this, "guttermousedown"), editor);
@@ -236,7 +237,7 @@ export class MouseHandler {
 		onCaptureInterval();
 	}
 	cancelContextMenu() {
-		var stop = (e?: MouseEvent)=>{
+		var stop = (e?: { target: Editor, domEvent: UIEvent})=>{
 			// if (e && e.domEvent && e.domEvent.type != "contextmenu")
 			// 	return;
 			this.editor.off("nativecontextmenu", stop);

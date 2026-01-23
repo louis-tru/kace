@@ -62,14 +62,14 @@ dom.importCss({
 
 ".ace-dawn .ace_invalid.ace_illegal": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#F8F8F8",
 	backgroundColor: "#B52A1D",
 },
 
 ".ace-dawn .ace_invalid.ace_deprecated": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#B52A1D",
 },
 
@@ -91,7 +91,7 @@ dom.importCss({
 },
 
 ".ace-dawn .ace_storage": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#A71D5D",
 },
 
@@ -104,7 +104,7 @@ dom.importCss({
 },
 
 ".ace-dawn .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#5A525F",
 },
 

@@ -108,12 +108,12 @@ dom.importCss({
 },
 
 ".ace-github-light-default .ace_invalid.ace_illegal": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#B31D28",
 },
 
 ".ace-github-light-default .ace_invalid.ace_deprecated": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#B31D28",
 },
 

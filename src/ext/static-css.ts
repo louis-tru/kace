@@ -4,9 +4,9 @@ import * as dom from '../lib/dom';
 dom.importCss({
 
 ".ace_static_highlight": {
-	textFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', 'source-code-pro', 'Droid Sans Mono', monospace",
-	textSize: 12,
-	textWhiteSpace: "preWrap",
+	fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', 'source-code-pro', 'Droid Sans Mono', monospace",
+	fontSize: 12,
+	whiteSpace: "preWrap",
 },
 
 ".ace_static_highlight .ace_gutter": {

@@ -1,26 +1,14 @@
 "use strict";
 
-import util from "quark/util";
 import * as useragent from "../lib/env";
 import {nls} from "../config";
-import * as lang from "../lib/lang";
 import * as clipboard from "../clipboard";
-import {View,Textarea} from "quark";
+import {View,InputSink} from "quark";
 import type {Editor} from "../editor";
-import {StyleSheets} from 'quark/css';
-import {UIEvent, KeyEvent} from 'quark/event';
+import type {InputEvent} from 'quark/event';
 import * as event from "../lib/event";
-
-const BROKEN_SETDATA = false;//useragent.isChrome < 18;
-const USE_IE_MIME_TYPE = false;// useragent.isIE;
-const HAS_FOCUS_ARGS = false;//useragent.isChrome > 63;
-const MAX_LINE_LENGTH = 400;
-
-import KEYS from "../lib/keys";
-const MODS = KEYS.KEY_MODS;
-const isIOS = useragent.iOS;
-const isMobile = useragent.mobile;
-const valueResetRegex = isIOS ? /\s/ : /\n/;
+import type { Composition } from "../virtual_renderer";
+import type { ClipboardEvent } from "../mouse/mouse_event";
 
 export interface TextInputAriaOptions {
 	activeDescendant?: string;
@@ -31,29 +19,11 @@ export interface TextInputAriaOptions {
 
 export class TextInput {
 	private host: Editor;
-	private text: Textarea;
-	private copied = false;
-	private pasted = false;
-	//private inComposition: (boolean|Object) & {
-	private inComposition?: {
-		context?: any, useTextareaForIME?: boolean, selectionStart?: number, markerRange?: any
-	};
-	private sendingText = false;
-	private tempStyle?: StyleSheets;
+	private text: InputSink;
+	private inComposition?: Composition;
 	private commandMode = false;
-	private ignoreFocusEvents = false;
-	private lastValue = "";
-	private lastSelectionStart = 0;
-	private lastSelectionEnd = 0;
-	private lastRestoreEnd = 0;
-	private rowStart = Number.MAX_SAFE_INTEGER;
-	private rowEnd = Number.MIN_SAFE_INTEGER;
-	private numberOfExtraLines = 0;
 	private $isFocused = false;
-	private $focusScroll: boolean | string = false;
-	private resetSelection: (value?: string) => void;
 	private inputHandler: ((value: string) => void) | null = null;
-	private afterContextMenu = false;
 
 	/**
 	 * @param {View} parentNode
@@ -62,672 +32,203 @@ export class TextInput {
 	constructor(parentNode: View, host: Editor) {
 		this.host = host;
 		// this.text = dom.createElement("textarea");
-		this.text = new Textarea(parentNode.window);
+		this.text = new InputSink(parentNode.window);
 		this.text.class = ["ace_text-input"];
-		this.text.data = {};
+		this.text.style.opacity = 0; // don't draw the input
 
 		this.text.setAttribute("wrap", "off");
 		this.text.setAttribute("autocomplete", "off");
 		this.text.setAttribute("autocorrect", "off");
 		this.text.setAttribute("autocapitalize", "off");
-		this.text.setAttribute("spellcheck", "false");
-		this.text.style.opacity = 0;
+		this.text.setAttribute("spellcheck", false);
+
 		parentNode.prepend(this.text);
-
-		if (!isMobile) this.text.style.textSize = 1;
-
-		this.cancelComposition = this.cancelComposition.bind(this);
 
 		this.setAriaOptions({role: "textbox"});
 
 		this.text.onBlur.on((e) => {
-			if (this.ignoreFocusEvents)
-				return;
 			host.onBlur(e);
 			this.$isFocused = false;
 		});
 
 		this.text.onFocus.on((e) => {
-			if (this.ignoreFocusEvents) return;
 			this.$isFocused = true;
-			// if (useragent.isEdge) {
-			// 	// on edge focus event is fired even if document itself is not focused
-			// 	try {
-			// 		if (!document.hasFocus()) return;
-			// 	} catch (e) {
-			// 	}
-			// }
 			host.onFocus(e);
-			// if (useragent.isEdge)
-			// 	setTimeout(this.resetSelection.bind(this)); else this.resetSelection();
 		});
+
+		if (this.$isFocused) host.onFocus();
 
 		host.on("beforeEndOperation", () => {
 			var curOp = host.curOp;
 			var commandName = curOp && curOp.command && curOp.command.name;
-			if (commandName == "insertstring")
-				return;
+			if (commandName == "insertstring") return;
 			var isUserAction = commandName && (curOp && (curOp.docChanged || curOp.selectionChanged));
 			if (this.inComposition && isUserAction) {
 				// exit composition from commands other than insertstring
-				this.lastValue = this.text.value = "";
-				this.onCompositionEnd();
+				this.cancelComposition();
 			}
-			// sync value of textarea
-			this.resetSelection();
 		});
 
 		// if cursor changes position, we need to update the label with the correct row
 		host.on("changeSelection", this.setAriaLabel.bind(this));
 
-		this.resetSelection = isIOS ? this.$resetSelectionIOS : this.$resetSelection;
-
-		if (this.$isFocused) host.onFocus();
-
-		this.inputHandler = null;
-		this.afterContextMenu = false;
+		// event.addListener(this.text, "Cut", this.onCut.bind(this), host);
+		// event.addListener(this.text, "Copy", this.onCopy.bind(this), host);
+		// event.addListener(this.text, "Paste", this.onPaste.bind(this), host);
+		// has no clipboard events
+		if (!('onCut' in this.text) || !('onCopy' in this.text) || !('onPaste' in this.text)) {
+			parentNode.onKeyDown.on((e) => {
+				if (useragent.macOS ? !e.command: !e.ctrl) return;
+				switch (e.keycode) {
+					case 67: this.onCopy(e); break; // C
+					case 86: this.onPaste(e); break; // V
+					case 88: this.onCut(e); break;  // X
+				}
+			});
+		}
 
 		event.addCommandKeyListener(this.text, (e, hashId, keyCode) => {
 			// ignore command events during composition as they will
 			// either be handled by ime itself or fired again after ime end
 			if (this.inComposition) return;
-			return host.onCommandKey(e, hashId, keyCode);
+			host.onCommandKey(e, hashId, keyCode);
 		}, host);
-
-		event.addListener(this.text, "select", this.onSelect.bind(this), host);
-		event.addListener(this.text, "Change", this.onInput.bind(this), host);
-
-		// event.addListener(this.text, "cut", this.onCut.bind(this), host);
-		// event.addListener(this.text, "copy", this.onCopy.bind(this), host);
-		// event.addListener(this.text, "paste", this.onPaste.bind(this), host);
-
-		// Opera has no clipboard events
-		if (!('onCut' in this.text) || !('onCopy' in this.text) || !('onPaste' in this.text)) {
-			// event.addListener(parentNode, "keydown", (e) => {
-			parentNode.onKeyDown.on((e) => {
-				if ((useragent.macOS && !e.command) || !e.ctrl)
-					return;
-				switch (e.keycode) {
-					case 67:
-						this.onCopy(e);
-						break;
-					case 86:
-						this.onPaste(e);
-						break;
-					case 88:
-						this.onCut(e);
-						break;
-				}
-			});
-		}
-
-		this.syncComposition = lang.delayedCall(this.onCompositionUpdate.bind(this), 50).schedule.bind(null, null); //TODO: check this
-
-		event.addListener(this.text, "compositionstart", this.onCompositionStart.bind(this), host);
-		event.addListener(this.text, "compositionupdate", this.onCompositionUpdate.bind(this), host);
-		event.addListener(this.text, "keyup", this.onKeyup.bind(this), host);
-		event.addListener(this.text, "keydown", this.syncComposition.bind(this), host);
-		event.addListener(this.text, "compositionend", this.onCompositionEnd.bind(this), host);
-
-		this.closeTimeout;
-
-		event.addListener(this.text, "mouseup", this.$onContextMenu.bind(this), host);
-		event.addListener(this.text, "mousedown", (e) => {
-			e.preventDefault();
-			this.onContextMenuClose();
-		}, host);
-		// event.addListener(host.renderer.scroller, "contextmenu", this.$onContextMenu.bind(this), host);
-		// event.addListener(this.text, "contextmenu", this.$onContextMenu.bind(this), host);
-
-		if (isIOS) this.addIosSelectionHandler(parentNode, host, this.text);
+		event.addListener(this.text, "InputInsert", e=>this.onInputInsert(e as InputEvent), host);
+		event.addListener(this.text, "InputMarked", e=>this.onCompositionUpdate(e as InputEvent), host);
+		event.addListener(this.text, "InputUnmark", e=>this.onCompositionEnd(e as InputEvent), host);
 	}
 
-	/**
-	 * @internal
-	 * @param {View} parentNode
-	 * @param {import("../editor").Editor} host
-	 * @param {HTMLTextAreaElement} text
-	 */
-	addIosSelectionHandler(parentNode: View, host: Editor, text: Textarea) {
-		var typingResetTimeout = null;
-		var typing = false;
+	private lastMarkedText = "";
+	private lastCursorIndex = 0;
 
-		text.addEventListener("keydown", function (e) {
-			if (typingResetTimeout) clearTimeout(typingResetTimeout);
-			typing = true;
-		}, true);
+	onCompositionUpdate(e: InputEvent) {
+		if (!this.host.onCompositionStart ||
+				!this.host.onCompositionUpdate || this.host.$readOnly)
+			return;
+		if (this.commandMode)
+			return;// this.cancelComposition();
 
-		text.addEventListener("keyup", function (e) {
-			typingResetTimeout = setTimeout(function () {
-				typing = false;
-			}, 100);
-		}, true);
+		if (!this.inComposition) {
+			this.host._signal("compositionStart", void 0, this.host);
+			this.host.on("mousedown", this.cancelComposition); // cancel composition on mouse down
 
-		// IOS doesn't fire events for arrow keys, but this unique hack changes everything!
-		var detectArrowKeys = (e) => {
-			if (document.activeElement !== text) return;
-			if (typing || this.inComposition || host.$mouseHandler.isMousePressed) return;
+			this.lastMarkedText = "";
+			this.lastCursorIndex = 0;
 
-			if (this.copied) {
-				return;
-			}
-			var selectionStart = text.selectionStart;
-			var selectionEnd = text.selectionEnd;
+			// start composition if it wasn't started before
+			this.inComposition = {} as Composition;
+			var range = this.host.getSelectionRange();
+			range.end.row = range.start.row;
+			range.end.column = range.start.column;
+			this.inComposition.markerRange = range;
+			this.host.onCompositionStart(this.inComposition as Composition);
+		}
 
-			var key = null;
-			var modifier = 0;
-			// console.log(selectionStart, selectionEnd);
-			if (selectionStart == 0) {
-				key = KEYS.up;
-			}
-			else if (selectionStart == 1) {
-				key = KEYS.home;
-			}
-			else if (selectionEnd > this.lastSelectionEnd && this.lastValue[selectionEnd] == "\n") {
-				key = KEYS.end;
-			}
-			else if (selectionStart < this.lastSelectionStart && this.lastValue[selectionStart - 1] == " ") {
-				key = KEYS.left;
-				modifier = MODS.option;
-			}
-			else if (selectionStart < this.lastSelectionStart || (selectionStart == this.lastSelectionStart
-				&& this.lastSelectionEnd != this.lastSelectionStart && selectionStart == selectionEnd)) {
-				key = KEYS.left;
-			}
-			else if (selectionEnd > this.lastSelectionEnd && this.lastValue.slice(0, selectionEnd).split(
-				"\n").length > 2) {
-				key = KEYS.down;
-			}
-			else if (selectionEnd > this.lastSelectionEnd && this.lastValue[selectionEnd - 1] == " ") {
-				key = KEYS.right;
-				modifier = MODS.option;
-			}
-			else if (selectionEnd > this.lastSelectionEnd || (selectionEnd == this.lastSelectionEnd
-				&& this.lastSelectionEnd != this.lastSelectionStart && selectionStart == selectionEnd)) {
-				key = KEYS.right;
-			}
+		var markedText = e.input;
+		var cursorIndex = e.cursorIndex;
+		var restoreStart = markedText.length - cursorIndex;
 
-			if (selectionStart !== selectionEnd) modifier |= MODS.shift;
-
-			if (key) {
-				var result = host.onCommandKey({}, modifier, key);
-				if (!result && host.commands) {
-					key = KEYS.keyCodeToString(key);
-					var command = host.commands.findKeyCommand(modifier, key);
-					if (command) host.execCommand(command);
-				}
-				this.lastSelectionStart = selectionStart;
-				this.lastSelectionEnd = selectionEnd;
-				this.resetSelection("");
-			}
-		};
-		// On iOS, "selectionchange" can only be attached to the document object...
-		document.addEventListener("selectionchange", detectArrowKeys);
-		host.on("destroy", function () {
-			document.removeEventListener("selectionchange", detectArrowKeys);
+		this.host.onTextInput(markedText, {
+			extendLeft: this.lastCursorIndex,
+			extendRight: this.lastMarkedText.length - this.lastCursorIndex,
+			restoreStart: restoreStart,
+			restoreEnd: restoreStart,
 		});
+
+		this.lastMarkedText = markedText;
+		this.lastCursorIndex = cursorIndex;
+
+		this.inComposition.markerRange.end.column =
+			this.inComposition.markerRange.start.column + markedText.length;
 	}
 
-	private closeTimeout?: TimeoutResult;
-
-	onContextMenuClose() {
-		clearTimeout(this.closeTimeout);
-		this.closeTimeout = setTimeout(() => {
-			if (this.tempStyle) {
-				this.text.style = this.tempStyle;
-				this.tempStyle = {};
-			}
-			this.host.renderer.$isMousePressed = false;
-			if (this.host.renderer.$keepTextAreaAtCursor) this.host.renderer.$moveTextAreaToCursor();
-		}, 0);
-	}
-
-	$onContextMenu(e: UIEvent) {
-		util.assert(this == this.host.textInput, "TextInput.onContextMenu called with wrong context");
-		this.onContextMenu(e);
-		// this.host.textInput.onContextMenu(e);
-		this.onContextMenuClose();
-	}
-
-	/**
-	 * @internal
-	 * @param e
-	 */
-	onKeyup(e: KeyEvent) {
-		// workaround for a bug in ie where pressing esc silently moves selection out of textarea
-		if (e.keycode == 27 && this.text.value.length < this.text.selectionStart) {
-			if (!this.inComposition) this.lastValue = this.text.value;
-			this.lastSelectionStart = this.lastSelectionEnd = -1;
-			this.resetSelection();
-		}
-		this.syncComposition();
-	}
-
-	// COMPOSITION
-
-	/**
-	 * @internal
-	 */
-	cancelComposition() {
-		// force end composition
-		this.ignoreFocusEvents = true;
-		this.text.blur();
-		this.text.focus();
-		this.ignoreFocusEvents = false;
-	}
-
-	/**
-	 * @internal
-	 */
-	onCompositionStart(e: UIEvent) {
-		if (this.inComposition || !this.host.onCompositionStart || this.host.$readOnly) return;
-
-		this.inComposition = {};
-
-		if (this.commandMode) return;
-
-		if (e.data) this.inComposition.useTextareaForIME = false;
-
-		setTimeout(this.onCompositionUpdate.bind(this), 0);
-		this.host._signal("compositionStart", void 0, this.host);
-		this.host.on("mousedown", this.cancelComposition); //TODO:
-
-		var range = this.host.getSelectionRange();
-		range.end.row = range.start.row;
-		range.end.column = range.start.column;
-		this.inComposition.markerRange = range;
-		this.inComposition.selectionStart = this.lastSelectionStart;
-		this.host.onCompositionStart(this.inComposition);
-
-		if (this.inComposition.useTextareaForIME) {
-			this.lastValue = this.text.value = "";
-			this.lastSelectionStart = 0;
-			this.lastSelectionEnd = 0;
-		}
-		else {
-			if (this.text.msGetInputContext) this.inComposition.context = this.text.msGetInputContext();
-			if (this.text.getInputContext) this.inComposition.context = this.text.getInputContext();
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	onCompositionUpdate() {
-		if (!this.inComposition || !this.host.onCompositionUpdate || this.host.$readOnly) return;
-		if (this.commandMode) return this.cancelComposition();
-
-		if (this.inComposition.useTextareaForIME) {
-			this.host.onCompositionUpdate(this.text.value);
-		}
-		else {
-			var data = this.text.value;
-			this.sendText(data);
-			if (this.inComposition.markerRange) {
-				if (this.inComposition.context) {
-					this.inComposition.markerRange.start.column = this.inComposition.selectionStart = this.inComposition.context.compositionStartOffset;
-				}
-				this.inComposition.markerRange.end.column = this.inComposition.markerRange.start.column
-					+ this.lastSelectionEnd - this.inComposition.selectionStart + this.lastRestoreEnd;
-			}
-		}
-	}
-
-	/**
-	 * @internal
-	 */
-	onCompositionEnd(e?: UIEvent) {
-		if (!this.host.onCompositionEnd || this.host.$readOnly) return;
-		this.inComposition = false;
+	onCompositionEnd(e?: InputEvent) {
+		if (!this.host.onCompositionEnd || this.host.$readOnly)
+			return;
+		if (this.commandMode)
+			return;
+		this.inComposition = void 0;
 		this.host.onCompositionEnd();
 		this.host.off("mousedown", this.cancelComposition);
+
 		// note that resetting value of textarea at this point doesn't always work
 		// because textarea value can be silently restored
-		if (e)
-			this.onInput();
+		if (e) {
+			this.host.onTextInput(e.input, {
+				extendLeft: this.lastCursorIndex,
+				extendRight: this.lastMarkedText.length - this.lastCursorIndex,
+				restoreStart: 0,
+				restoreEnd: 0,
+			});
+		}
 	}
 
-	/**
-	 * @internal
-	 */
-	onCut(e: UIEvent) {
+	onInputInsert(e: InputEvent) {
+		if (this.inComposition)
+			return this.onCompositionEnd(e); // force end composition on input insert
+
+		// if (e && e.inputType) {
+		// 	if (e.inputType == "historyUndo") return this.host.execCommand("undo");
+		// 	if (e.inputType == "historyRedo") return this.host.execCommand("redo");
+		// }
+		this.host.onTextInput(e.input);
+	}
+
+	cancelComposition = () => {
+		if (this.inComposition) {
+			if (this.text.isMarkedText)
+				this.text.cancelMarkedText();
+			else
+				this.onCompositionEnd();
+		}
+	};
+
+	onCut(e: ClipboardEvent) {
 		this.doCopy(e, true);
 	}
 
-	/**
-	 * @internal
-	 */
-	onCopy(e: UIEvent) {
+	onCopy(e: ClipboardEvent) {
 		this.doCopy(e, false);
 	}
 
-	/**
-	 * @internal
-	 */
-	onPaste(e: UIEvent) {
-		var data = this.handleClipboardData(e);
-		if (clipboard.pasteCancelled()) return;
-		if (typeof data == "string") {
-			if (data) this.host.onPaste(data, e);
-			if (useragent.isIE) setTimeout(this.resetSelection);
-			event.preventDefault(e);
-		}
-		else {
-			this.text.value = "";
-			this.pasted = true;
-		}
-	}
-
-	/**
-	 * @internal
-	 * @param {ClipboardEvent} e
-	 * @param {boolean} isCut
-	 */
-	doCopy(e: UIEvent, isCut: boolean) {
+	doCopy(e: ClipboardEvent, isCut: boolean) {
 		var data = this.host.getCopyText();
-		if (!data) return event.preventDefault(e);
-
+		if (!data)
+			return event.preventDefault(e);
 		if (this.handleClipboardData(e, data)) {
-			if (isIOS) {
-				this.resetSelection(data);
-				this.copied = data;
-				setTimeout(() => {
-					this.copied = false;
-				}, 10);
-			}
 			isCut ? this.host.onCut() : this.host.onCopy();
 			event.preventDefault(e);
 		}
-		else {
-			this.copied = true;
-			this.text.value = data;
-			this.text.select();
-			setTimeout(() => {
-				this.copied = false;
-				this.resetSelection();
-				isCut ? this.host.onCut() : this.host.onCopy();
-			});
+	}
+
+	onPaste(e: ClipboardEvent) {
+		var data = this.handleClipboardData(e);
+		if (clipboard.isPasteCancelled())
+			return;
+		if (typeof data == "string") {
+			if (data)
+				this.host.onPaste(data, e);
+			event.preventDefault(e);
 		}
 	}
 
-	/**
-	 *
-	 * @internal
-	 * @param {ClipboardEvent} e
-	 * @param {string} [data]
-	 * @param {boolean} [forceIEMime]
-	 */
-	handleClipboardData(e: UIEvent, data?: string, forceIEMime?: boolean): any {
-		var clipboardData = e.clipboardData || window["clipboardData"];
-		if (!clipboardData || BROKEN_SETDATA) return;
-		// using "Text" doesn't work on old webkit but ie needs it
-		var mime = USE_IE_MIME_TYPE || forceIEMime ? "Text" : "text/plain";
-		try {
-			if (data) {
-				// Safari 5 has clipboardData object, but does not handle setData()
-				return clipboardData.setData(mime, data) !== false;
-			}
-			else {
-				return clipboardData.getData(mime);
-			}
-		} catch (e) {
-			if (!forceIEMime)
-				return this.handleClipboardData(e, data, true);
-		}
-	}
-
-	/**
-	 * @internal
-	 * @param e
-	 */
-	onInput(e?: UIEvent) {
-		if (this.inComposition) return this.onCompositionUpdate();
-		if (e && e.inputType) {
-			if (e.inputType == "historyUndo") return this.host.execCommand("undo");
-			if (e.inputType == "historyRedo") return this.host.execCommand("redo");
-		}
-		var data = this.text.value;
-		var inserted = this.sendText(data, true);
-		if (data.length > MAX_LINE_LENGTH + 100 || valueResetRegex.test(inserted) || isMobile && this.lastSelectionStart
-			< 1 && this.lastSelectionStart == this.lastSelectionEnd) {
-			this.resetSelection();
-		}
-	}
-
-	/**
-	 * @internal
-	 * @param {string} value
-	 * @param {boolean} [fromInput]
-	 * @return {string}
-	 */
-	sendText(value: string, fromInput?: boolean): string {
-		if (this.afterContextMenu) this.afterContextMenu = false;
-		if (this.pasted) {
-			this.resetSelection();
-			if (value) this.host.onPaste(value);
-			this.pasted = false;
-			return "";
-		}
-		else {
-			var selectionStart = this.text.selectionStart;
-			var selectionEnd = this.text.selectionEnd;
-
-			var extendLeft = this.lastSelectionStart;
-			var extendRight = this.lastValue.length - this.lastSelectionEnd;
-
-			var inserted = value;
-			var restoreStart = value.length - selectionStart;
-			var restoreEnd = value.length - selectionEnd;
-
-			var i = 0;
-			while (extendLeft > 0 && this.lastValue[i] == value[i]) {
-				i++;
-				extendLeft--;
-			}
-			inserted = inserted.slice(i);
-			i = 1;
-			while (extendRight > 0 && this.lastValue.length - i > this.lastSelectionStart - 1
-			&& this.lastValue[this.lastValue.length - i] == value[value.length - i]) {
-				i++;
-				extendRight--;
-			}
-			restoreStart -= i - 1;
-			restoreEnd -= i - 1;
-			var endIndex = inserted.length - i + 1;
-			if (endIndex < 0) {
-				extendLeft = -endIndex;
-				endIndex = 0;
-			}
-			inserted = inserted.slice(0, endIndex);
-
-			// composition update can be called without any change
-			if (!fromInput && !inserted && !restoreStart && !extendLeft && !extendRight && !restoreEnd) return "";
-			this.sendingText = true;
-
-			// some android keyboards converts two spaces into sentence end, which is not useful for code
-			var shouldReset = false;
-			if (useragent.android && inserted == ". ") {
-				inserted = "  ";
-				shouldReset = true;
-			}
-
-			if (inserted && !extendLeft && !extendRight && !restoreStart && !restoreEnd || this.commandMode) {
-				this.host.onTextInput(inserted);
-			}
-			else {
-				this.host.onTextInput(inserted, {
-					extendLeft: extendLeft,
-					extendRight: extendRight,
-					restoreStart: restoreStart,
-					restoreEnd: restoreEnd
-				});
-			}
-			this.sendingText = false;
-
-			this.lastValue = value;
-			this.lastSelectionStart = selectionStart;
-			this.lastSelectionEnd = selectionEnd;
-			this.lastRestoreEnd = restoreEnd;
-			return shouldReset ? "\n" : inserted;
-		}
-	}
-
-	/**
-	 * @internal
-	 * @param e
-	 */
-	onSelect(e: UIEvent) {
-		if (this.inComposition) return;
-
-		var isAllSelected = (text) => {
-			return text.selectionStart === 0 && text.selectionEnd >= this.lastValue.length && text.value
-				=== this.lastValue && this.lastValue && text.selectionEnd !== this.lastSelectionEnd;
-		};
-
-		if (this.copied) {
-			this.copied = false;
-		}
-		else if (isAllSelected(this.text)) {
-			this.host.selectAll();
-			this.resetSelection();
-		}
-		else if (isMobile && this.text.selectionStart != this.lastSelectionStart) {
-			this.resetSelection();
-		}
-	}
-
-	$resetSelectionIOS(value?: string) {
-		if (!this.$isFocused || (this.copied && !value) || this.sendingText) return;
-		if (!value) value = "";
-		var newValue = "\n ab" + value + "cde fg\n";
-		if (newValue != this.text.value) this.text.value = this.lastValue = newValue;
-
-		var selectionStart = 4;
-		var selectionEnd = 4 + (value.length || (this.host.selection.isEmpty() ? 0 : 1));
-
-		if (this.lastSelectionStart != selectionStart || this.lastSelectionEnd != selectionEnd) {
-			this.text.setSelectionRange(selectionStart, selectionEnd);
-		}
-		this.lastSelectionStart = selectionStart;
-		this.lastSelectionEnd = selectionEnd;
-	}
-
-	$resetSelection() {
-		if (this.inComposition || this.sendingText) return;
-		// modifying selection of blured textarea can focus it (chrome mac/linux)
-		if (!this.$isFocused && !this.afterContextMenu) return;
-		// see https://github.com/ajaxorg/ace/issues/2114
-		// this prevents infinite recursion on safari 8
-		this.inComposition = true;
-
-		var selectionStart = 0;
-		var selectionEnd = 0;
-		var line = "";
-
-		// Convert from row,column position to the linear position with respect to the current
-		// block of lines in the textarea.
-		var positionToSelection = (row, column) => {
-			var selection = column;
-
-			for (var i = 1; i <= row - this.rowStart && i < 2 * this.numberOfExtraLines + 1; i++) {
-				selection += this.host.session.getLine(row - i).length + 1;
-			}
-			return selection;
-		};
-
-		if (this.host.session) {
-			var selection = this.host.selection;
-			var range = selection.getRange();
-			var row = selection.cursor.row;
-
-			// We keep 2*numberOfExtraLines + 1 lines in the textarea, if the new active row
-			// is within the current block of lines in the textarea we do nothing. If the new row
-			// is one row above or below the current block, move up or down to the next block of lines.
-			// If the new row is further than 1 row away from the current block grab a new block centered
-			// around the new row.
-			if (row === this.rowEnd + 1) {
-				this.rowStart = this.rowEnd + 1;
-				this.rowEnd = this.rowStart + 2 * this.numberOfExtraLines;
-			}
-			else if (row === this.rowStart - 1) {
-				this.rowEnd = this.rowStart - 1;
-				this.rowStart = this.rowEnd - 2 * this.numberOfExtraLines;
-			}
-			else if (row < this.rowStart - 1 || row > this.rowEnd + 1) {
-				this.rowStart = row > this.numberOfExtraLines ? row - this.numberOfExtraLines : 0;
-				this.rowEnd = row > this.numberOfExtraLines ? row + this.numberOfExtraLines : 2
-					* this.numberOfExtraLines;
-			}
-
-			var lines = [];
-
-			for (var i = this.rowStart; i <= this.rowEnd; i++) {
-				lines.push(this.host.session.getLine(i));
-			}
-
-			line = lines.join('\n');
-
-			selectionStart = positionToSelection(range.start.row, range.start.column);
-			selectionEnd = positionToSelection(range.end.row, range.end.column);
-
-			if (range.start.row < this.rowStart) {
-				var prevLine = this.host.session.getLine(this.rowStart - 1);
-				selectionStart = range.start.row < this.rowStart - 1 ? 0 : selectionStart;
-				selectionEnd += prevLine.length + 1;
-				line = prevLine + "\n" + line;
-			}
-			else if (range.end.row > this.rowEnd) {
-				var nextLine = this.host.session.getLine(this.rowEnd + 1);
-				selectionEnd = range.end.row > this.rowEnd + 1 ? nextLine.length : range.end.column;
-				selectionEnd += line.length + 1;
-				line = line + "\n" + nextLine;
-			}
-			else if (isMobile && row > 0) {
-				line = "\n" + line;
-				selectionEnd += 1;
-				selectionStart += 1;
-			}
-
-			if (line.length > MAX_LINE_LENGTH) {
-				if (selectionStart < MAX_LINE_LENGTH && selectionEnd < MAX_LINE_LENGTH) {
-					line = line.slice(0, MAX_LINE_LENGTH);
-				}
-				else {
-					line = "\n";
-					if (selectionStart == selectionEnd) {
-						selectionStart = selectionEnd = 0;
-					}
-					else {
-						selectionStart = 0;
-						selectionEnd = 1;
-					}
-				}
-			}
-
-			var newValue = line + "\n\n";
-			if (newValue != this.lastValue) {
-				this.text.value = this.lastValue = newValue;
-				this.lastSelectionStart = this.lastSelectionEnd = newValue.length;
-			}
-		}
-
-		// contextmenu on mac may change the selection
-		if (this.afterContextMenu) {
-			this.lastSelectionStart = this.text.selectionStart;
-			this.lastSelectionEnd = this.text.selectionEnd;
-		}
-		// on firefox this throws if textarea is hidden
-		if (this.lastSelectionEnd != selectionEnd || this.lastSelectionStart != selectionStart || this.text.selectionEnd
-			!= this.lastSelectionEnd // on ie edge selectionEnd changes silently after the initialization
-		) {
-			try {
-				this.text.setSelectionRange(selectionStart, selectionEnd);
-				this.lastSelectionStart = selectionStart;
-				this.lastSelectionEnd = selectionEnd;
-			} catch (e) {
-			}
-		}
-		this.inComposition = false;
+	handleClipboardData(e: ClipboardEvent, data?: string): string | boolean {
+		// var clipboardData = e.clipboardData || window["clipboardData"];
+		// if (!clipboardData)
+		// 	return false;
+		// try {
+		// 	if (data) {
+		// 		return clipboardData.setData("text/plain", data) !== false;
+		// 	}
+		// 	else {
+		// 		return clipboardData.getData("text/plain");
+		// 	}
+		// } catch (err) {
+		// 	console.error(err);
+		// 	return false;
+		// }
+		// TODO: implement clipboard handling
+		return false;
 	}
 
 	/**
@@ -744,17 +245,8 @@ export class TextInput {
 	 * @param {number} number - The number of extra lines to add. Must be non-negative.
 	 */
 	setNumberOfExtraLines(number: number) {
-		this.rowStart = Number.MAX_SAFE_INTEGER;
-		this.rowEnd = Number.MIN_SAFE_INTEGER;
-
-		if (number < 0) {
-			this.numberOfExtraLines = 0;
-			return;
-		}
-
-		this.numberOfExtraLines = number;
+		// Noop for non-DOM environments
 	}
-
 
 	setAriaLabel() {
 		var ariaLabel = "";
@@ -792,42 +284,12 @@ export class TextInput {
 	}
 
 	focus() {
+		// Accessibility hook (kept for future platform-level integration)
 		// On focusing on the textarea, read active row number to assistive tech.
 		this.setAriaOptions({
 			setLabel: this.host.renderer.enableKeyboardAccessibility
 		});
-
-		if (this.tempStyle || HAS_FOCUS_ARGS || this.$focusScroll == "browser") return this.text.focus(
-			{preventScroll: true});
-
-		var top = this.text.style.top;
-		this.text.style.position = "fixed";
-		this.text.style.top = "0px";
-		try {
-			var isTransformed = this.text.getBoundingClientRect().top != 0;
-		} catch (e) {
-			// getBoundingClientRect on IE throws error if element is not in the dom tree
-			return;
-		}
-		var ancestors = [];
-		if (isTransformed) {
-			var t = this.text.parentElement;
-			while (t && t.nodeType == 1) {
-				ancestors.push(t);
-				t.setAttribute("ace_nocontext", "true");
-				if (!t.parentElement && t.getRootNode) t = t.getRootNode()["host"]; else t = t.parentElement;
-			}
-		}
-		this.text.focus({preventScroll: true});
-		if (isTransformed) {
-			ancestors.forEach(function (p) {
-				p.removeAttribute("ace_nocontext");
-			});
-		}
-		setTimeout(() => {
-			this.text.style.position = "";
-			if (this.text.style.top == "0px") this.text.style.top = top;
-		}, 0);
+		this.text.focus();
 	}
 
 	blur() {
@@ -838,7 +300,7 @@ export class TextInput {
 		return this.$isFocused;
 	}
 
-	setInputHandler(cb) {
+	setInputHandler(cb: ((value: string) => void) | null) {
 		this.inputHandler = cb;
 	}
 
@@ -857,61 +319,18 @@ export class TextInput {
 	 */
 	setCommandMode(value: boolean) {
 		this.commandMode = value;
-		this.text.readOnly = false;
+		this.text.readonly = false;
 	}
 
 	setReadOnly(readOnly: boolean) {
-		if (!this.commandMode) this.text.readOnly = readOnly;
+		if (!this.commandMode)
+			this.text.readonly = readOnly;
 	}
 
 	setCopyWithEmptySelection(value: boolean) {
 	}
 
-	onContextMenu(e: UIEvent) {
-		this.afterContextMenu = true;
-		this.resetSelection();
-		this.host._emit("nativecontextmenu", {
-			target: this.host,
-			domEvent: e
-		}, this.host);
-		this.moveToMouse(e, true);
-	}
-
-	/**
-	 * @param e
-	 * @param {boolean} bringToFront
-	 */
-	moveToMouse(e: UIEvent, bringToFront: boolean) {
-		if (!this.tempStyle) this.tempStyle = this.text.style.cssText;
-		this.text.style.cssText = (bringToFront ? "z-index:100000;" : "") + (useragent.isIE ? "opacity:0.1;" : "")
-			+ "text-indent: -" + (this.lastSelectionStart + this.lastSelectionEnd) * this.host.renderer.characterWidth
-			* 0.5 + "px;";
-
-		var rect = this.host.container.getBoundingClientRect();
-		var style = dom.computedStyle(this.host.container);
-		var top = rect.top + (parseInt(style.borderTopWidth) || 0);
-		var left = rect.left + (parseInt(style.borderLeftWidth) || 0);
-		var maxTop = rect.bottom - top - this.text.clientHeight - 2;
-		var move = (e) => {
-			dom.translate(this.text, e.clientX - left - 2, Math.min(e.clientY - top - 2, maxTop));
-		};
-		move(e);
-
-		if (e.type != "mousedown") return;
-
-		this.host.renderer.$isMousePressed = true;
-
-		clearTimeout(this.closeTimeout);
-		// on windows context menu is opened after mouseup
-		if (useragent.isWin) event.capture(this.host.container, move, this.onContextMenuClose.bind(this));
-	}
-
 	destroy() {
-		if (this.text.parentElement) this.text.parentElement.removeChild(this.text);
+		this.text.remove();
 	}
 }
-
-// export function $setUserAgentForTests(_isMobile: boolean, _isIOS: boolean) {
-// 	isMobile = _isMobile;
-// 	isIOS = _isIOS;
-// };

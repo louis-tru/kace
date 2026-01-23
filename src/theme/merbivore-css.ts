@@ -87,7 +87,7 @@ dom.importCss({
 },
 
 ".ace-merbivore .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#AD2EA4",
 },
 

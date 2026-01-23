@@ -5,6 +5,6 @@ const app = new Application();
 
 const win = new Window().render(
 	<free width="match" height="match">
-		<text value="Hello world" textSize={48} align="centerMiddle" />
+		<text value="Hello world" fontSize={48} align="centerMiddle" />
 	</free>
 );

@@ -67,7 +67,7 @@ dom.importCss({
 
 ".ace-twilight .ace_invalid.ace_deprecated": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#D2A8A1",
 },
 
@@ -101,7 +101,7 @@ dom.importCss({
 },
 
 ".ace-twilight .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#5F5A60",
 },
 

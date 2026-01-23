@@ -39,5 +39,7 @@
 		"node_modules",
 		"types",
 		"tool",
+		// "src",
+		// "ace-internal.ts",
 	]
 }

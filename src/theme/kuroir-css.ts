@@ -68,7 +68,7 @@ dom.importCss({
 ".ace-kuroir .ace_invalid.ace_illegal": {textColor: "#FD1224",backgroundColor: "rgba(255, 6, 0, 0.15)",},
 ".ace-kuroir .ace_invalid.ace_deprecated": {
 		// text-decoration: "underline",
-textSlant: "italic", textColor: "#FD1732", backgroundColor: "#E8E9E8",},
+fontSlant: "italic", textColor: "#FD1732", backgroundColor: "#E8E9E8",},
 ".ace-kuroir .ace_string": {textColor: "#639300",},
 ".ace-kuroir .ace_string.ace_regexp": {textColor: "#417E00",backgroundColor: "#C9D4BE",},
 ".ace-kuroir .ace_comment": {color: "rgba(148, 148, 148, 0.91)",backgroundColor: "rgba(220, 220, 220, 0.56)",},

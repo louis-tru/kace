@@ -7,7 +7,7 @@ import {MouseEvent} from "./mouse/mouse_event";
 import type { Editor } from "./editor";
 import type {KeyEvent, MouseEvent as UIMouseEvent} from "quark/event";
 import type { EditSession } from "./edit_session";
-import {KeyboardKeyCode} from "quark/keyboard";
+import {KeyboardCode} from "quark/keyboard";
 import type { Theme } from "./theme";
 
 const CLASSNAME = "ace_tooltip";
@@ -244,7 +244,7 @@ export class HoverTooltip extends Tooltip {
 		// this.hide = this.hide.bind(this);
 
 		var el = this.getElement();
-		el.style.textWhiteSpace = "preWrap";
+		el.style.whiteSpace = "preWrap";
 		el.style.receive = true;
 		// el.addEventListener("mouseout", this.onMouseOut, true);
 		el.onMouseLeave.on(this.onMouseLeave);
@@ -462,7 +462,7 @@ export class HoverTooltip extends Tooltip {
 
 	hide(e?: KeyEvent, type?: string) {
 		if (e && this.$fromKeyboard && type == "keydown") {
-			if (e.keycode == KeyboardKeyCode.ESC) {
+			if (e.keycode == KeyboardCode.ESC) {
 				return;
 			}
 		}

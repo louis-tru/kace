@@ -38,7 +38,7 @@ export class FontMetrics extends EventEmitter<FontMetricsEvents> {
 
 		// this.$measureNode = dom.createElement("div");
 		this.$measureNode = new Text(parentEl.window);
-		this.$measureNode.style.textWhiteSpace = "pre"; // prevent wrapping
+		this.$measureNode.style.whiteSpace = "pre"; // prevent wrapping
 		// this.$measureNode.value = lang.stringRepeat("X", CHAR_COUNT);
 
 		this.el.append(this.$measureNode);
@@ -57,9 +57,9 @@ export class FontMetrics extends EventEmitter<FontMetricsEvents> {
 		if (!size)
 			size = this.$measureSizes();
 		if (size && (this.$characterSize.width !== size.width || this.$characterSize.height !== size.height)) {
-			this.$measureNode.style.textWeight = "bold";
+			this.$measureNode.style.fontWeight = "bold";
 			var boldSize = this.$measureSizes();
-			this.$measureNode.style.textWeight = "regular";
+			this.$measureNode.style.fontWeight = "regular";
 			this.$characterSize = size;
 			this.charSizes = Object.create(null);
 			this.allowBoldFonts = !!boldSize && boldSize.width === size.width && boldSize.height === size.height;

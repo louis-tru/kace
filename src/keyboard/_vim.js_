@@ -836,7 +836,7 @@ createCss({
 		backgroundColor: '#0000',
 		// width: '20em',
 		// color: 'inherit',
-		textFamily: 'monospace',
+		fontFamily: 'monospace',
 	},
 })//, "vimMode", false);
 

@@ -155,7 +155,6 @@ export class Lines<El extends Box = CellElement> {
 		if (!cell) {
 			// var element = dom.createElement("div");
 			var element = new Box(this.element.window) as El;
-			element.data = {};
 			if (initElement)
 				initElement(element);
 

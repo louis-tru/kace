@@ -1,7 +1,7 @@
 
 import {View} from "quark";
 import { KeyEvent, UIEvent,GestureEvent } from "quark/event";
-import { KeyboardKeyCode } from "quark/keyboard";
+import { KeyboardCode } from "quark/keyboard";
 
 declare module "quark/view" {
 	// Extend Quark View to support attributes
@@ -31,8 +31,8 @@ declare module "quark/event" {
 }
 
 View.prototype.getAttributes = function(this: View) {
-	return this.data || (this.data = {});
-	// return this as any as Dict;
+	// return this.data || (this.data = {});
+	return this as any as Dict;
 };
 
 View.prototype.setAttribute = function(this: View, key: string, val: any) {
@@ -65,24 +65,24 @@ View.prototype.querySelectorForAttribute = function(this: View, attr: string, va
 };
 
 const KeyCodeToDomCode: Partial<Record<number, string>> = {
-	[KeyboardKeyCode.ENTER]: 'Enter',
-	[KeyboardKeyCode.TAB]: 'Tab',
-	[KeyboardKeyCode.BACK_SPACE]: 'Backspace',
-	[KeyboardKeyCode.ESC]: 'Escape',
-	[KeyboardKeyCode.SPACE]: 'Space',
+	[KeyboardCode.ENTER]: 'Enter',
+	[KeyboardCode.TAB]: 'Tab',
+	[KeyboardCode.BACK_SPACE]: 'Backspace',
+	[KeyboardCode.ESC]: 'Escape',
+	[KeyboardCode.SPACE]: 'Space',
 
-	[KeyboardKeyCode.LEFT]: 'ArrowLeft',
-	[KeyboardKeyCode.RIGHT]: 'ArrowRight',
-	[KeyboardKeyCode.UP]: 'ArrowUp',
-	[KeyboardKeyCode.DOWN]: 'ArrowDown',
+	[KeyboardCode.LEFT]: 'ArrowLeft',
+	[KeyboardCode.RIGHT]: 'ArrowRight',
+	[KeyboardCode.UP]: 'ArrowUp',
+	[KeyboardCode.DOWN]: 'ArrowDown',
 
-	[KeyboardKeyCode.MOVE_HOME]: 'Home',
-	[KeyboardKeyCode.MOVE_END]: 'End',
-	[KeyboardKeyCode.PAGE_UP]: 'PageUp',
-	[KeyboardKeyCode.PAGE_DOWN]: 'PageDown',
+	[KeyboardCode.MOVE_HOME]: 'Home',
+	[KeyboardCode.MOVE_END]: 'End',
+	[KeyboardCode.PAGE_UP]: 'PageUp',
+	[KeyboardCode.PAGE_DOWN]: 'PageDown',
 
-	[KeyboardKeyCode.DELETE]: 'Delete',
-	[KeyboardKeyCode.INSERT]: 'Insert',
+	[KeyboardCode.DELETE]: 'Delete',
+	[KeyboardCode.INSERT]: 'Insert',
 };
 
 UIEvent.prototype.stopPropagation = function(this: UIEvent) {
@@ -123,15 +123,15 @@ Object.defineProperties(KeyEvent.prototype, {
 
 			// 控制键兜底
 			switch (this.keycode) {
-				case KeyboardKeyCode.ENTER: return 'Enter';
-				case KeyboardKeyCode.TAB: return 'Tab';
-				case KeyboardKeyCode.BACK_SPACE: return 'Backspace';
-				case KeyboardKeyCode.ESC: return 'Escape';
-				case KeyboardKeyCode.SPACE: return ' ';
-				case KeyboardKeyCode.LEFT: return 'ArrowLeft';
-				case KeyboardKeyCode.RIGHT: return 'ArrowRight';
-				case KeyboardKeyCode.UP: return 'ArrowUp';
-				case KeyboardKeyCode.DOWN: return 'ArrowDown';
+				case KeyboardCode.ENTER: return 'Enter';
+				case KeyboardCode.TAB: return 'Tab';
+				case KeyboardCode.BACK_SPACE: return 'Backspace';
+				case KeyboardCode.ESC: return 'Escape';
+				case KeyboardCode.SPACE: return ' ';
+				case KeyboardCode.LEFT: return 'ArrowLeft';
+				case KeyboardCode.RIGHT: return 'ArrowRight';
+				case KeyboardCode.UP: return 'ArrowUp';
+				case KeyboardCode.DOWN: return 'ArrowDown';
 			}
 
 			return '';
@@ -146,21 +146,21 @@ Object.defineProperties(KeyEvent.prototype, {
 			const kc = this.code;
 
 			// A-Z → KeyA
-			if (kc >= KeyboardKeyCode.A && kc <= KeyboardKeyCode.Z) {
+			if (kc >= KeyboardCode.A && kc <= KeyboardCode.Z) {
 				return 'Key' + String.fromCharCode(kc);
 			}
 
 			// 0-9 → Digit0
-			if (kc >= KeyboardKeyCode.NUM_0 && kc <= KeyboardKeyCode.NUM_9) {
-				return 'Digit' + (kc - KeyboardKeyCode.NUM_0);
+			if (kc >= KeyboardCode.NUM_0 && kc <= KeyboardCode.NUM_9) {
+				return 'Digit' + (kc - KeyboardCode.NUM_0);
 			}
 
 			// F1-F24
-			if (kc >= KeyboardKeyCode.F1 && kc <= KeyboardKeyCode.F24) {
-				return 'F' + (kc - KeyboardKeyCode.F1 + 1);
+			if (kc >= KeyboardCode.F1 && kc <= KeyboardCode.F24) {
+				return 'F' + (kc - KeyboardCode.F1 + 1);
 			}
 
-			return KeyCodeToDomCode[kc] || KeyboardKeyCode[kc] || '';
+			return KeyCodeToDomCode[kc] || KeyboardCode[kc] || '';
 		}
 	}
 });

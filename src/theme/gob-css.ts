@@ -69,7 +69,7 @@ dom.importCss({
 
 ".ace-gob .ace_invalid.ace_deprecated": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#20F8C0",
 },
 
@@ -103,7 +103,7 @@ dom.importCss({
 },
 
 ".ace-gob .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#00E060",
 },
 

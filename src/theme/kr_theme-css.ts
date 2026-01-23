@@ -95,7 +95,7 @@ dom.importCss({
 },
 
 ".ace-kr-theme .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#706D5B",
 },
 

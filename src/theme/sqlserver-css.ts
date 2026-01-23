@@ -83,7 +83,7 @@ dom.importCss({
 },
 
 ".ace-sqlserver .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#FD971F",
 },
 

@@ -79,7 +79,7 @@ dom.importCss({
 },
 
 ".ace-idle-fingers .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 },
 
 ".ace-idle-fingers .ace_string": {
@@ -91,7 +91,7 @@ dom.importCss({
 },
 
 ".ace-idle-fingers .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#BC9458",
 },
 

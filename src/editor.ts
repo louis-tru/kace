@@ -45,7 +45,7 @@ import type {LanguageToolsOptions} from "./ext/language_tools";
 import type {LinkingEventsEditorExtension,LinkingOptions} from "./ext/linking";
 import type {TabstopManagerEditorExtension} from "./snippets";
 import type {EmacsEditorExtension} from "./keyboard/emacs";
-import type {TextareaEditorExtension} from "./ext/textarea";
+// import type {TextareaEditorExtension} from "./ext/textarea";
 import type {PromptEditorExtension} from "./ext/prompt";
 import type { SyntaxMode } from './mode';
 import type { Theme } from './theme';
@@ -146,7 +146,8 @@ export interface Editor extends EventEmitter<EditorEvents>,
 		EditorMultiSelectProperties,
 		OptionsProvider<EditorOptions>,
 		CodeLenseEditorExtension, ElasticTabstopsEditorExtension,
-		TextareaEditorExtension, PromptEditorExtension, 
+		// TextareaEditorExtension,
+		PromptEditorExtension, 
 		EmacsEditorExtension, TabstopManagerEditorExtension {
 	session: EditSession;
 	$mergeUndoDeltas?: any,
@@ -594,7 +595,7 @@ export class Editor extends EventEmitter<EditorEvents> {
 	 * @return {number}
 	 */
 	getFontSize() {
-		return this.getOption("fontSize") || this.container.textSize.value;
+		return this.getOption("fontSize") || this.container.fontSize.value;
 	}
 
 	/**
@@ -1169,10 +1170,9 @@ export class Editor extends EventEmitter<EditorEvents> {
 	 *
 	 * @param text
 	 * @param composition
-	 * @returns {*}
 	 * @internal
 	 */
-	onTextInput(text: string, composition?: any) {
+	onTextInput(text: string, composition?: Parameters<Editor["applyComposition"]>[1]) {
 		if (!composition)
 			return this.keyBinding.onTextInput(text);
 
@@ -1186,11 +1186,11 @@ export class Editor extends EventEmitter<EditorEvents> {
 	}
 
 	/**
-	 * @param {string} [text]
-	 * @param {any} [composition]
+	 * @param {string} text
+	 * @param {any} composition
 	 */
-	applyComposition(text: string, composition?: any) {
-		if (composition && (composition.extendLeft || composition.extendRight)) {
+	applyComposition(text: string, composition: { extendLeft: number, extendRight: number, restoreStart: number, restoreEnd: number}) {
+		if (composition.extendLeft || composition.extendRight) {
 			var r = this.selection.getRange();
 			r.start.column -= composition.extendLeft;
 			r.end.column += composition.extendRight;
@@ -3199,7 +3199,7 @@ config.defineOptions(Editor.prototype, "editor", {
 	theme: "renderer",
 	hasCssTransforms: "renderer",
 	maxPixelHeight: "renderer",
-	useTextareaForIME: "renderer",
+	// useTextareaForIME: "renderer",
 	useResizeObserver: "renderer",
 	useSvgGutterIcons: "renderer",
 	showFoldedAnnotations: "renderer",

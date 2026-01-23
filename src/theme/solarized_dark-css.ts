@@ -82,7 +82,7 @@ dom.importCss({
 },
 
 ".ace-solarized-dark .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#657B83",
 },
 

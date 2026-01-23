@@ -806,7 +806,6 @@ export class Gutter extends EventEmitter<GutterEvents> {
 
 			// customWidget = dom.createElement("span");
 			customWidget = new Box(rowCell.element.window);
-			customWidget.data = {};
 			rowCell.element.customWidget = customWidget; // storing reference to the custom widget in the cell element
 			customWidget.class = [`ace_custom-widget`, className];
 			customWidget.setAttribute("tabindex", -1);
@@ -878,26 +877,22 @@ export class Gutter extends EventEmitter<GutterEvents> {
 function onCreateCell(element: CellElement) {
 	// var textNode = document.createTextNode('');
 	var textNode = new Label(element.window);
-	textNode.data = {};
 	// element.appendChild(textNode);
 	element.append(textNode);
 	element.textNode = textNode;
 
 	// var foldWidget = dom.createElement("span");
 	var foldWidget = new Box(element.window);
-	foldWidget.data = {};
 	element.append(foldWidget);
 	element.foldWidget = foldWidget;
 
 	// var annotationNode = dom.createElement("span");
 	var annotationNode = new Box(element.window);
-	annotationNode.data = {};
 	element.append(annotationNode);
 	element.annotationNode = annotationNode;
 
 	// var annotationIconNode = dom.createElement("span");
 	var annotationIconNode = new Box(element.window);
-	annotationIconNode.data = {};
 	annotationNode.append(annotationIconNode);
 	element.annotationIconNode = annotationIconNode;
 	

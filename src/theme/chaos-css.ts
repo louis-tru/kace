@@ -96,7 +96,7 @@ dom.importCss({
 },
 ".ace-chaos .ace_comment": {
 	textColor: "#555",
-	textSlant: "italic",
+	fontSlant: "italic",
 	paddingBottom: 0,
 },
 ".ace-chaos .ace_variable": {

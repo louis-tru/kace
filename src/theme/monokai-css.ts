@@ -84,7 +84,7 @@ dom.importCss({
 },
 
 ".ace-monokai .ace_storage.ace_type,.ace-monokai .ace_support.ace_class,.ace-monokai .ace_support.ace_type": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#66D9EF",
 },
 
@@ -93,7 +93,7 @@ dom.importCss({
 },
 
 ".ace-monokai .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#FD971F",
 },
 

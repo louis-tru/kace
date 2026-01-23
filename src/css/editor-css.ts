@@ -33,8 +33,8 @@ dom.importCss({
 	// position: relative;
 	// overflow: hidden;
 	padding: 0,
-	textSize: 12,
-	textFamily: 'Monaco, Menlo, Ubuntu Mono, Consolas, Source Code Pro, source-code-pro, monospace',
+	fontSize: 12,
+	fontFamily: 'Monaco, Menlo, Ubuntu Mono, Consolas, Source Code Pro, source-code-pro, monospace',
 	// direction: ltr;
 	// text-align: left;
 	// -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -52,8 +52,8 @@ dom.importCss({
 	// -webkit-user-select: none,
 	// user-select: none,
 	cursor: 'text',
-	textWordBreak: 'normal',
-	textWhiteSpace: 'pre',
+	wordBreak: 'normal',
+	whiteSpace: 'pre',
 },
 
 '.ace_content': {
@@ -256,7 +256,7 @@ dom.importCss({
 	// -webkit-user-select: text,
 	// user-select: text,
 	/*with \`pre-line\` chrome inserts &nbsp; instead of space*/
-	textWhiteSpace: 'pre', // !important
+	whiteSpace: 'pre', // !important
 },
 '.ace_text-input.ace_composition': {
 	// background: transparent;
@@ -292,7 +292,7 @@ dom.importCss({
 	// overflow: hidden;
 	/* workaround for chrome bug https://github'.com/ajaxorg/ace/issues/2312*/
 	// word-wrap: 'normal',
-	textWhiteSpace: 'pre',
+	whiteSpace: 'pre',
 	height: '100%',
 	width: '100%',
 	// box-sizing: border-box;
@@ -481,11 +481,11 @@ dom.importCss({
 	zIndex: 999999,
 	// box-sizing: border-box;
 	cursor: 'normal',
-	textWhiteSpace: 'preWrap',
-	textWordBreak: 'breakWord',
-	textLineHeight: 0, // auto/normal
-	textSlant: 'normal', // font-style: normal;
-	textWeight: 'normal',
+	whiteSpace: 'preWrap',
+	wordBreak: 'breakWord',
+	lineHeight: 0, // auto/normal
+	fontSlant: 'normal', // font-style: normal;
+	fontWeight: 'normal',
 	// letter-spacing: normal;
 	receive: false,
 	// overflow: auto;
@@ -493,7 +493,7 @@ dom.importCss({
 	// overscroll-behavior: contain;
 },
 '.ace_tooltip .pre': {
-	textWhiteSpace: 'preWrap',
+	whiteSpace: 'preWrap',
 },
 
 '.ace_tooltip.ace_dark': {
@@ -629,15 +629,15 @@ dom.importCss({
 },
 
 '.ace_bold': {
-	textWeight: 'bold',
+	fontWeight: 'bold',
 },
 
 '.ace_nobold .ace_bold': {
-	textWeight: 'regular',
+	fontWeight: 'regular',
 },
 
 '.ace_italic': {
-	textSlant: 'italic',
+	fontSlant: 'italic',
 },
 
 '.ace_error-marker': {
@@ -687,10 +687,10 @@ dom.importCss({
 
 '.ace_placeholder': {
 // 	position: relative;
-	textFamily: 'arial',
+	fontFamily: 'arial',
 // 	transform: scale(0.9);
 // 	transform-origin: left;
-	textWhiteSpace: 'pre',
+	whiteSpace: 'pre',
 	opacity: 0.7,
 	margin: [0, 10],
 	zIndex: 1,
@@ -698,11 +698,11 @@ dom.importCss({
 
 '.ace_ghost_text': {
 	opacity: 0.5,
-	textSlant: 'italic',
+	fontSlant: 'italic',
 },
 
 '.ace_ghost_text_container > .div': {
-	textWhiteSpace: 'pre',
+	whiteSpace: 'pre',
 },
 
 // '.ghost_text_line_wrapped::after': {

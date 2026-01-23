@@ -57,7 +57,7 @@ dom.importCss({
 },
 
 ".ace-chrome .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#FD971F",
 },
 ".ace-chrome .ace_keyword.ace_operator": {

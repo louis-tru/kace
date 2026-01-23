@@ -22,7 +22,7 @@ dom.importCss({
 		// position: 'absolute',
 		// top: 0,
 		zIndex: 99,
-		textWhiteSpace: 'normal',
+		whiteSpace: 'normal',
 	},
 
 	'.ace_search.left': {
@@ -44,7 +44,7 @@ dom.importCss({
 		marginLeft: 0,
 		marginRight: 20,
 		// overflow: 'hidden',
-		textLineHeight: 2.01, // 1.9
+		lineHeight: 2.01, // 1.9
 	},
 
 	'.ace_replace_form': {
@@ -72,7 +72,7 @@ dom.importCss({
 		paddingRight: 6,
 		paddingTop: 0,
 		paddingBottom: 0,
-		textSize: 'inherit',
+		fontSize: 'inherit',
 		margin: 0,
 		// lineHeight: 'inherit',
 		// minWidth: '17em',
@@ -88,7 +88,7 @@ dom.importCss({
 	'.ace_searchbtn': {
 		borderColor: '#cbcbcb',
 		borderWidth: 1,
-		// textLineHeight: 'inherit',
+		// lineHeight: 'inherit',
 		// display: 'inline-block',
 		paddingLeft: 6,
 		paddingRight: 6,
@@ -144,7 +144,7 @@ dom.importCss({
 		borderWidth: 0,
 		textColor: '#656565',
 		cursor: 'pointer',
-		textSize: 16,
+		fontSize: 16,
 		padding: 0,
 		width: 14,
 		height: 14,
@@ -202,7 +202,7 @@ dom.importCss({
 
 	'.ace_search_counter': {
 		// float: 'left',
-		textFamily: 'Arial',
+		fontFamily: 'Arial',
 		paddingLeft: 8,
 		paddingRight: 8,
 	},

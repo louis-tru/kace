@@ -6,7 +6,7 @@ import {MouseEvent as UIMouseEvent} from "quark/event";
 import type {UIEvent, ClickEvent, KeyEvent} from "quark/event";
 import type { Editor } from "../editor";
 import type { Point } from "../range";
-import { KeyboardKeyCode } from "quark/keyboard";
+import { KeyboardCode } from "quark/keyboard";
 import { Vec2 } from "quark/types";
 
 export type ClipboardEvent = UIEvent;
@@ -58,7 +58,7 @@ export class MouseEvent {
 		this.defaultPrevented = false;
 		this.detail = 0;
 
-		if (domEvent.keycode == KeyboardKeyCode.MOUSE_LEFT && domEvent instanceof UIMouseEvent) {
+		if (domEvent.keycode == KeyboardCode.MOUSE_LEFT && domEvent instanceof UIMouseEvent) {
 			const now = Date.now();
 			let detail = domEvent.sender.getAttribute("detail") as number || 0;
 			let detailTime = domEvent.sender.getAttribute("detailTime") as number || 0;

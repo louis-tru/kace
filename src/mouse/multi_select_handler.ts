@@ -22,7 +22,7 @@ export function onMouseDown(e: MouseEvent) {
 	// 	button = e.button;
 
 	if (e.editor.inMultiSelectMode && button == 2) {
-		e.editor.textInput.onContextMenu(e.domEvent);
+		// e.editor.textInput.onContextMenu(e.domEvent);
 		return;
 	}
 	

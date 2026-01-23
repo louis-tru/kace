@@ -41,7 +41,9 @@ export class EventListener {
 export type UIEventType = 'Click' | 'MouseDown' | 'MouseUp' | 'MouseMove' | 'MouseLeave' | 'MouseEnter'
 	| 'MouseWheel' | 'KeyDown' | 'KeyUp' | 'KeyPress' | 'Focus' | 'Blur' | 'Change' | 'Scroll' | 'Back'
 	| 'KeyEnter' | 'TouchStart' | 'TouchEnd' | 'TouchMove' | 'TouchCancel' | 'UIStateChange' | 'ActionKeyframe'
-	| 'ActionLoop' | 'Load' | 'Error' | 'MultiClick';
+	| 'ActionLoop' | 'Load' | 'Error' | 'MultiClick'
+	| 'InputInsert' | 'InputDelete' | 'InputMarked' | 'InputUnmark' | 'InputControl'
+	;
 
 /**
  * Adds an event listener to the specified element.
@@ -109,7 +111,7 @@ function normalizeCommandKeys(callback: (e: KeyEvent, hashId: number, keyCode: n
 	if (keyCode in keys.MODIFIER_KEYS) {
 		keyCode = -1;
 	}
-	
+
 	if (!hashId && keyCode === 13) {
 		if (e.location === 3) {
 			callback(e, hashId, -keyCode);
@@ -118,13 +120,13 @@ function normalizeCommandKeys(callback: (e: KeyEvent, hashId: number, keyCode: n
 		}
 	}
 
-	if (/*useragent.isChromeOS &&*/ hashId & 8) {
-		callback(e, hashId, keyCode);
-		if (!e.isDefault)
-			return; // default prevented
-		else
-			hashId &= ~8;
-	}
+	// if (useragent.isChromeOS && hashId & 8) { // command
+	// 	callback(e, hashId, keyCode);
+	// 	if (!e.isDefault)
+	// 		return; // default prevented
+	// 	else
+	// 		hashId &= ~8;
+	// }
 
 	// If there is no hashId and the keyCode is not a function key, then
 	// we don't call the callback as we don't handle a command key here

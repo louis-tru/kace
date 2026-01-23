@@ -64,16 +64,16 @@ dom.importCss({
 
 ".ace-iplastic .ace_constant": {
 	textColor: "#333333",
-	textWeight: 700,
+	fontWeight: 700,
 },
 
 ".ace-iplastic .ace_constant.ace_character,.ace-iplastic .ace_constant.ace_language,.ace-iplastic .ace_constant.ace_numeric,.ace-iplastic .ace_constant.ace_other": {
 	textColor: "#0066FF",
-	textWeight: 700,
+	fontWeight: 700,
 },
 
 ".ace-iplastic .ace_constant.ace_numeric": {
-	textWeight: 100,
+	fontWeight: 100,
 },
 
 ".ace-iplastic .ace_invalid": {
@@ -88,7 +88,7 @@ dom.importCss({
 
 ".ace-iplastic .ace_support.ace_constant,.ace-iplastic .ace_support.ace_function": {
 	textColor: "#333333",
-	textWeight: 700,
+	fontWeight: 700,
 },
 
 ".ace-iplastic .ace_fold": {
@@ -98,16 +98,16 @@ dom.importCss({
 
 ".ace-iplastic .ace_storage.ace_type,.ace-iplastic .ace_support.ace_class,.ace-iplastic .ace_support.ace_type": {
 	textColor: "#3333fc",
-	textWeight: 700,
+	fontWeight: 700,
 },
 
 ".ace-iplastic .ace_entity.ace_name.ace_function,.ace-iplastic .ace_entity.ace_other,.ace-iplastic .ace_entity.ace_other.ace_attribute-name,.ace-iplastic .ace_variable": {
 	textColor: "#3366cc",
-	textSlant: "italic",
+	fontSlant: "italic",
 },
 
 ".ace-iplastic .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#2469E0",
 },
 
@@ -117,7 +117,7 @@ dom.importCss({
 
 ".ace-iplastic .ace_comment": {
 	textColor: "#777777",
-	textSlant: "italic",
+	fontSlant: "italic",
 },
 
 ".ace-iplastic .ace_fold-widget": {

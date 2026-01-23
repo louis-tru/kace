@@ -13,7 +13,7 @@ dom.importCss({
 },
 
 ".ace-github .ace_keyword": {
-	textWeight: "bold",
+	fontWeight: "bold",
 },
 
 ".ace-github .ace_string": {
@@ -38,7 +38,7 @@ dom.importCss({
 
 ".ace-github .ace_comment": {
 	textColor: "#998",
-	textSlant: "italic",
+	fontSlant: "italic",
 },
 
 ".ace-github .ace_variable.ace_language": {
@@ -46,16 +46,16 @@ dom.importCss({
 },
 
 ".ace-github .ace_paren": {
-	textWeight: "bold",
+	fontWeight: "bold",
 },
 
 ".ace-github .ace_boolean": {
-	textWeight: "bold",
+	fontWeight: "bold",
 },
 
 ".ace-github .ace_string.ace_regexp": {
 	textColor: "#009926",
-	textWeight: "normal",
+	fontWeight: "normal",
 },
 
 ".ace-github .ace_variable.ace_instance": {
@@ -63,7 +63,7 @@ dom.importCss({
 },
 
 ".ace-github .ace_constant.ace_language": {
-	textWeight: "bold",
+	fontWeight: "bold",
 },
 
 ".ace-github .ace_cursor": {
@@ -87,7 +87,7 @@ dom.importCss({
 /* bold keywords cause cursor issues for some fonts */
 /* this disables bold style for editor and keeps for static highlighter */
 ".ace-github.ace_nobold .ace_line > span": {
-	textWeight: "normal",// !important",
+	fontWeight: "normal",// !important",
 },
 
 ".ace-github .ace_marker-layer .ace_step": {

@@ -120,7 +120,7 @@ dom.importCss({
 },
 
 ".ace-gruvbox-dark-hard .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#928374",
 },
 

@@ -26,7 +26,7 @@ dom.importCss({
 },
 
 ".ace-gruvbox .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#928375",
 },
 

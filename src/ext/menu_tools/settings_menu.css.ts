@@ -50,11 +50,11 @@ dom.importCss({
 },
 '.ace_optionsMenuKey': {
 	textColor: '#483D8B',
-	textWeight: 'bold',
+	fontWeight: 'bold',
 },
 '.ace_optionsMenuCommand': {
 	textColor: '#008B8B',
-	textWeight: 'regular',
+	fontWeight: 'regular',
 },
 '.ace_optionsMenuEntry .input, .ace_optionsMenuEntry .button': {
 	// vertical-align: middle;

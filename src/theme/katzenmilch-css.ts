@@ -109,7 +109,7 @@ dom.importCss({
 },
 
 ".ace-katzenmilch .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"rgba(64, 79, 80, 0.67)",
 	backgroundColor: "rgba(95, 15, 255, 0.0078)",
 },
@@ -125,7 +125,7 @@ dom.importCss({
 },
 
 ".ace-katzenmilch .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"rgba(51, 150, 159, 0.87)",
 	backgroundColor: "rgba(5, 214, 249, 0.043)",
 },

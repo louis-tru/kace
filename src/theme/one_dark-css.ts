@@ -125,7 +125,7 @@ dom.importCss({
 },
 
 ".ace-one-dark .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#5c6370",
 },
 

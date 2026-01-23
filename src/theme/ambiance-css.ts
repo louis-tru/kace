@@ -152,7 +152,7 @@ dom.importCss({
 
 ".ace-ambiance .ace_invalid,.ace-ambiance .ace_deprecated": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#D2A8A1",
 },
 
@@ -177,7 +177,7 @@ dom.importCss({
 },
 
 ".ace-ambiance .ace_comment": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor: "#555",
 },
 
@@ -186,7 +186,7 @@ dom.importCss({
 
 ".ace-ambiance .ace_comment.ace_doc.ace_tag": {
 	textColor: "#666",
-	textSlant: "normal",
+	fontSlant: "normal",
 },
 
 ".ace-ambiance .ace_definition,.ace-ambiance .ace_type": {

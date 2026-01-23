@@ -79,7 +79,7 @@ dom.importCss({
 },
 
 ".ace-vibrant-ink .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 },
 
 ".ace-vibrant-ink .ace_string": {
@@ -95,7 +95,7 @@ dom.importCss({
 },
 
 ".ace-vibrant-ink .ace_entity.ace_other.ace_attribute-name": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#99CC99",
 },
 

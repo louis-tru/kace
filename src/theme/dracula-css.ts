@@ -98,12 +98,12 @@ dom.importCss({
 },
 
 ".ace-dracula .ace_support.ace_class": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#66d9ef",
 },
 
 ".ace-dracula .ace_support.ace_type": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#66d9ef",
 },
 
@@ -112,7 +112,7 @@ dom.importCss({
 },
 
 ".ace-dracula .ace_storage.ace_type": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#8be9fd",
 },
 
@@ -139,7 +139,7 @@ dom.importCss({
 },
 
 ".ace-dracula .ace_variable.ace_parameter": {
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#ffb86c",
 },
 

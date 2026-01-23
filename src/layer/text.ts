@@ -8,7 +8,7 @@ import { isTextToken} from "./text_util";
 import config from "../config";
 import type {EditSession} from "../edit_session";
 import {View, Text as TextView, Morph, Label, Box} from "quark";
-import {FontMetrics} from "./font_metrics";
+import type {FontMetrics} from "./font_metrics";
 import type { Token } from "../background_tokenizer";
 import type {FoldLine} from "../edit_session/fold_line";
 
@@ -61,7 +61,6 @@ export class Text extends EventEmitter<TextEvents> {
 		this.element = new Morph(parentEl.window);
 		this.element.class = ["ace_layer", "ace_text-layer"];
 		this.element.style.layout = "free";
-		this.element.data = {};
 		parentEl.append(this.element);
 		this.$updateEolChar = this.$updateEolChar.bind(this);
 		this.$lines = new Lines(this.element);
@@ -490,7 +489,6 @@ export class Text extends EventEmitter<TextEvents> {
 			let span = new TextView(this.element.window);
 			if (token.type == "fold"){
 				span.style.width = (token.value.length * this.config.characterWidth);
-				span.data = {};
 				span.data.title = nls("inline-fold.closed.title", "Unfold code");
 			}
 			span.class = classes.split(" ");

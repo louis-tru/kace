@@ -61,7 +61,7 @@ export class DefaultHandlers {
 				editor.selection.moveToPosition(pos);
 			// 2: contextmenu, 1: linux paste
 			if (button == 2) {
-				editor.textInput.onContextMenu(ev.domEvent);
+				// editor.textInput.onContextMenu(ev.domEvent);
 				// if (!useragent.isMozilla)
 				ev.preventDefault();
 			}

@@ -83,7 +83,7 @@ dom.importCss({
 
 ".ace-pastel-on-dark .ace_invalid.ace_deprecated": {
 	// text-decoration: "underline",
-	textSlant: "italic",
+	fontSlant: "italic",
 	textColor:"#D2A8A1",
 },
 
